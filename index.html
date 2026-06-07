@@ -99,7 +99,7 @@
             </form>
 
             <form id="password-form" class="admin-form">
-              <h2>Alterar password</h2>
+              <h2>Alterar password de atleta</h2>
               <label>
                 Atleta
                 <select id="password-runner"></select>
@@ -112,6 +112,23 @@
                 <span aria-hidden="true">↻</span>
                 Guardar password
               </button>
+            </form>
+
+            <form id="admin-password-form" class="admin-form">
+              <h2>Password do acesso geral</h2>
+              <label>
+                Password atual
+                <input id="current-admin-password" type="password" autocomplete="current-password" />
+              </label>
+              <label>
+                Nova password
+                <input id="new-admin-password" type="password" autocomplete="new-password" />
+              </label>
+              <button class="primary-action compact-action" type="submit">
+                <span aria-hidden="true">✓</span>
+                Guardar password geral
+              </button>
+              <p id="admin-password-message" class="form-note" role="status"></p>
             </form>
 
             <section class="admin-form">

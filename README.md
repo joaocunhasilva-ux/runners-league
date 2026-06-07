@@ -43,6 +43,7 @@ Password: admin123
 ```
 
 Estas passwords são criadas com hash na base de dados. Antes de abrir a app ao público, devem ser substituídas por passwords próprias por atleta.
+O acesso geral pode trocar a sua password na área `Geral`, em `Password do acesso geral`.
 
 ## Gestão de atletas
 
@@ -51,6 +52,7 @@ Entrar como `Geral` com a password de admin permite:
 - criar novos atletas;
 - definir a password inicial;
 - alterar a password de atletas existentes;
+- alterar a password do próprio acesso geral;
 - resolver pedidos de recuperação de password;
 - ver quantas provas cada atleta tem registadas.
 

@@ -21,10 +21,14 @@ const navButtons = document.querySelectorAll("[data-view]");
 const appPages = document.querySelectorAll(".app-page");
 const createRunnerForm = document.querySelector("#create-runner-form");
 const passwordForm = document.querySelector("#password-form");
+const adminPasswordForm = document.querySelector("#admin-password-form");
 const newRunnerName = document.querySelector("#new-runner-name");
 const newRunnerPassword = document.querySelector("#new-runner-password");
 const passwordRunner = document.querySelector("#password-runner");
 const updatedRunnerPassword = document.querySelector("#updated-runner-password");
+const currentAdminPassword = document.querySelector("#current-admin-password");
+const newAdminPassword = document.querySelector("#new-admin-password");
+const adminPasswordMessage = document.querySelector("#admin-password-message");
 const passwordResetRequests = document.querySelector("#password-reset-requests");
 const runnerAccounts = document.querySelector("#runner-accounts");
 const pendingValidations = document.querySelector("#pending-validations");
@@ -924,6 +928,25 @@ passwordForm.addEventListener("submit", async (event) => {
   renderProfiles(data.profiles);
   renderRunnerAccounts(data.runners);
   updatedRunnerPassword.value = "";
+});
+
+adminPasswordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  adminPasswordMessage.textContent = "";
+  try {
+    const data = await apiRequest("/api/session/password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword: currentAdminPassword.value,
+        newPassword: newAdminPassword.value,
+      }),
+    });
+    currentAdminPassword.value = "";
+    newAdminPassword.value = "";
+    adminPasswordMessage.textContent = data.message;
+  } catch (error) {
+    adminPasswordMessage.textContent = error.message;
+  }
 });
 
 passwordResetRequests.addEventListener("click", async (event) => {

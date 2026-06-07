@@ -507,6 +507,26 @@ def update_runner_password(payload, user):
     return {"profiles": fetch_profiles(), "runners": fetch_runner_accounts()}
 
 
+def update_session_password(payload, user):
+    current_password = payload.get("currentPassword", "")
+    new_password = payload.get("newPassword", "")
+    if len(new_password) < 6:
+        raise ValueError("A nova password deve ter pelo menos 6 caracteres")
+
+    with connect() as connection:
+        existing = connection.execute(
+            "SELECT id, password_hash FROM users WHERE id = ?",
+            (user["id"],),
+        ).fetchone()
+        if existing is None or not verify_password(current_password, existing["password_hash"]):
+            raise ValueError("Password atual incorreta")
+        connection.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (hash_password(new_password), existing["id"]),
+        )
+    return {"message": "Password do acesso geral atualizada."}
+
+
 def request_password_reset(payload):
     name = payload.get("name", "").strip()
     if len(name) < 2:
@@ -718,6 +738,15 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
                 self.send_json({"error": str(error)}, status=400)
             except PermissionError as error:
                 self.send_json({"error": str(error)}, status=403)
+            return
+        if self.path == "/api/session/password":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(update_session_password(self.read_json(), user))
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
             return
         if self.path == "/api/submissions/validation":
             user = self.require_auth()
