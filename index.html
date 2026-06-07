@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Runners League</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <aside class="submit-panel" aria-label="Sessão e submissão">
+          <div class="brand-row">
+            <div class="brand-mark">RL</div>
+            <div>
+              <p class="eyebrow">Runners League</p>
+              <h1 id="panel-title">Entrar na liga</h1>
+            </div>
+          </div>
+
+          <nav class="side-nav" aria-label="Navegação principal">
+            <button class="nav-button active" type="button" data-view="league">Liga</button>
+            <button class="nav-button" type="button" data-view="rules">Conceito e regras</button>
+          </nav>
+
+          <section id="login-panel" class="login-panel">
+            <fieldset>
+              <legend>Acesso</legend>
+              <div class="segmented access-switch">
+                <input type="radio" name="access" id="access-runner" value="runner" checked />
+                <label for="access-runner">Corredor</label>
+                <input type="radio" name="access" id="access-general" value="general" />
+                <label for="access-general">Geral</label>
+              </div>
+            </fieldset>
+
+            <label>
+              Perfil
+              <select id="profile">
+                <option value="João Silva">João Silva</option>
+                <option value="Mariana Costa">Mariana Costa</option>
+                <option value="Rui Martins">Rui Martins</option>
+              </select>
+            </label>
+
+            <label>
+              Password
+              <input id="password" type="password" autocomplete="current-password" />
+            </label>
+
+            <button id="login-button" class="primary-action" type="button">
+              <span aria-hidden="true">→</span>
+              Entrar
+            </button>
+            <button id="password-reset-request" class="secondary-action" type="button">
+              Recuperar password
+            </button>
+            <p id="login-message" class="form-note" role="status"></p>
+          </section>
+
+          <section id="session-panel" class="session-panel hidden">
+            <div class="session-card">
+              <div>
+                <span id="session-role">Corredor</span>
+                <strong id="session-name">João Silva</strong>
+              </div>
+              <button id="logout" class="icon-button" type="button" title="Sair" aria-label="Sair">×</button>
+            </div>
+          </section>
+
+          <section id="general-panel" class="general-panel hidden">
+            <div class="admin-stat">
+              <span>Total de provas</span>
+              <strong id="admin-races">0</strong>
+            </div>
+            <div class="admin-stat">
+              <span>Corredores ativos</span>
+              <strong id="admin-runners">0</strong>
+            </div>
+            <div class="admin-stat">
+              <span>Média de pontos</span>
+              <strong id="admin-average">0</strong>
+            </div>
+
+            <form id="create-runner-form" class="admin-form">
+              <h2>Criar atleta</h2>
+              <label>
+                Nome
+                <input id="new-runner-name" type="text" autocomplete="name" />
+              </label>
+              <label>
+                Password inicial
+                <input id="new-runner-password" type="password" autocomplete="new-password" />
+              </label>
+              <button class="primary-action compact-action" type="submit">
+                <span aria-hidden="true">+</span>
+                Criar atleta
+              </button>
+            </form>
+
+            <form id="password-form" class="admin-form">
+              <h2>Alterar password</h2>
+              <label>
+                Atleta
+                <select id="password-runner"></select>
+              </label>
+              <label>
+                Nova password
+                <input id="updated-runner-password" type="password" autocomplete="new-password" />
+              </label>
+              <button class="primary-action compact-action" type="submit">
+                <span aria-hidden="true">↻</span>
+                Guardar password
+              </button>
+            </form>
+
+            <section class="admin-form">
+              <h2>Recuperação de passwords</h2>
+              <div id="password-reset-requests" class="reset-request-list"></div>
+            </section>
+
+            <section class="admin-form">
+              <h2>Atletas registados</h2>
+              <div id="runner-accounts" class="runner-account-list"></div>
+            </section>
+
+            <section class="admin-form">
+              <h2>Provas pendentes</h2>
+              <label>
+                Pesquisar
+                <input id="validation-search" type="search" placeholder="Atleta ou prova" />
+              </label>
+              <div id="pending-validations" class="validation-list"></div>
+            </section>
+
+            <form id="edit-submission-form" class="admin-form">
+              <h2>Editar prova</h2>
+              <div class="form-grid">
+                <label>
+                  Pesquisar
+                  <input id="admin-race-search" type="search" placeholder="Atleta ou prova" />
+                </label>
+                <label>
+                  Estado
+                  <select id="admin-status-filter">
+                    <option value="all">Todos</option>
+                    <option value="pending">Pendentes</option>
+                    <option value="approved">Aprovadas</option>
+                    <option value="rejected">Rejeitadas</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Prova
+                <select id="edit-submission-select"></select>
+              </label>
+              <label>
+                Nome da prova
+                <input id="edit-race-name" type="text" />
+              </label>
+              <label>
+                Link oficial
+                <input id="edit-official-url" type="url" />
+              </label>
+              <div class="form-grid">
+                <label>
+                  Distância
+                  <input id="edit-distance" type="number" min="1" max="200" step="0.1" />
+                </label>
+                <label>
+                  Tempo total
+                  <input id="edit-total-seconds" type="number" min="1" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Classificação
+                  <input id="edit-rank" type="number" min="1" />
+                </label>
+                <label>
+                  Finalistas
+                  <input id="edit-finishers" type="number" min="1" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Altimetria
+                  <input id="edit-elevation" type="number" min="0" />
+                </label>
+                <label>
+                  Época
+                  <input id="edit-season-year" type="number" min="2020" max="2100" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <button class="primary-action compact-action" type="submit">
+                  <span aria-hidden="true">✓</span>
+                  Guardar
+                </button>
+                <button id="delete-submission" class="danger-action" type="button">Apagar</button>
+              </div>
+            </form>
+          </section>
+
+          <form id="race-form" class="hidden">
+            <label>
+              Corredor
+              <input id="runner" type="text" value="João Silva" autocomplete="name" readonly />
+            </label>
+
+            <label>
+              Prova oficial
+              <input id="race-name" type="text" value="Meia Maratona de Lisboa" />
+            </label>
+
+            <label>
+              Link da classificação oficial
+              <input id="official-url" type="url" value="https://example.com/classificacao" />
+            </label>
+
+            <div class="form-grid">
+              <label>
+                Distância
+                <select id="distance">
+                  <option value="5">5 km</option>
+                  <option value="10">10 km</option>
+                  <option value="21.0975" selected>Meia maratona</option>
+                  <option value="42.195">Maratona</option>
+                  <option value="custom">Outra</option>
+                </select>
+              </label>
+
+              <label id="custom-distance-wrap" class="hidden">
+                Km
+                <input id="custom-distance" type="number" min="1" max="200" step="0.1" value="15" />
+              </label>
+            </div>
+
+            <div class="form-grid time-grid">
+              <label>
+                Horas
+                <input id="hours" type="number" min="0" max="24" value="1" />
+              </label>
+              <label>
+                Min.
+                <input id="minutes" type="number" min="0" max="59" value="32" />
+              </label>
+              <label>
+                Seg.
+                <input id="seconds" type="number" min="0" max="59" value="48" />
+              </label>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Classificação
+                <input id="rank" type="number" min="1" value="185" />
+              </label>
+              <label>
+                Finalistas
+                <input id="finishers" type="number" min="1" value="5420" />
+              </label>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Altimetria positiva
+                <input id="elevation" type="number" min="0" max="6000" value="180" />
+              </label>
+              <label>
+                Nível competitivo
+                <select id="competition">
+                  <option value="1">Local</option>
+                  <option value="1.06">Regional</option>
+                  <option value="1.12" selected>Nacional</option>
+                  <option value="1.2">Internacional</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Época
+              <input id="season-year" type="number" min="2020" max="2100" value="2026" />
+            </label>
+
+            <fieldset>
+              <legend>Terreno</legend>
+              <div class="segmented">
+                <input type="radio" name="terrain" id="road" value="1" checked />
+                <label for="road">Estrada</label>
+                <input type="radio" name="terrain" id="trail" value="1.12" />
+                <label for="trail">Trail</label>
+                <input type="radio" name="terrain" id="track" value="0.96" />
+                <label for="track">Pista</label>
+              </div>
+            </fieldset>
+
+            <p class="form-note">A prova fica pendente até ser aprovada pelo acesso geral.</p>
+
+            <button class="primary-action" type="submit">
+              <span aria-hidden="true">+</span>
+              Submeter prova
+            </button>
+          </form>
+        </aside>
+
+        <section id="league-page" class="league-view app-page active" aria-live="polite">
+          <div class="top-bar">
+            <div>
+              <p id="view-eyebrow" class="eyebrow">Ranking público</p>
+              <h2 id="view-title">Ranking por pontos</h2>
+            </div>
+            <label class="season-control">
+              Época
+              <select id="season-filter"></select>
+            </label>
+            <button id="reset" class="icon-button" type="button" title="Limpar submissões" aria-label="Limpar submissões">↺</button>
+          </div>
+
+          <section class="score-band">
+            <canvas id="route-canvas" width="900" height="320" aria-label="Visualização da prova"></canvas>
+            <div class="score-card">
+              <p class="eyebrow">Pontuação estimada</p>
+              <strong id="score">0</strong>
+              <span id="score-label">pontos</span>
+            </div>
+            <div class="metric-stack">
+              <div>
+                <span>Ritmo</span>
+                <strong id="pace">0:00/km</strong>
+              </div>
+              <div>
+                <span>Percentil</span>
+                <strong id="percentile">0%</strong>
+              </div>
+              <div>
+                <span>Dificuldade</span>
+                <strong id="difficulty">0.00x</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="public-summary">
+            <div>
+              <p class="eyebrow">Ranking público</p>
+              <h2>As 6 melhores provas de cada atleta contam para a época.</h2>
+              <p>Atletas com menos de 3 provas aprovadas aparecem no ranking, mas ainda não são elegíveis para prémios finais.</p>
+            </div>
+            <div id="top-three" class="top-three"></div>
+          </section>
+
+          <section class="breakdown">
+            <div>
+              <span>Resultado oficial</span>
+              <progress id="official-bar" value="0" max="100"></progress>
+              <strong id="official-points">0 pts</strong>
+            </div>
+            <div>
+              <span>Performance</span>
+              <progress id="performance-bar" value="0" max="100"></progress>
+              <strong id="performance-points">0 pts</strong>
+            </div>
+            <div>
+              <span>Dificuldade</span>
+              <progress id="difficulty-bar" value="0" max="100"></progress>
+              <strong id="difficulty-points">0 pts</strong>
+            </div>
+            <div>
+              <span>Bónus validação</span>
+              <progress id="validation-bar" value="0" max="100"></progress>
+              <strong id="validation-points">0 pts</strong>
+            </div>
+          </section>
+
+          <section class="submissions">
+            <div class="section-title">
+              <h2 id="submissions-title">Ranking da época</h2>
+              <span id="submission-count">0 atletas</span>
+            </div>
+            <div id="submissions-list" class="submission-list"></div>
+          </section>
+
+          <section id="athlete-profile" class="athlete-profile hidden"></section>
+        </section>
+
+        <section id="rules-page" class="league-view rules-page app-page" aria-label="Conceito e regras">
+          <div class="top-bar">
+            <div>
+              <p class="eyebrow">Conceito</p>
+              <h2>Uma liga justa entre provas diferentes</h2>
+            </div>
+          </div>
+
+          <section class="concept-hero">
+            <div>
+              <p>
+                A Runners League transforma resultados oficiais de corrida numa pontuação comparável.
+                O objetivo é permitir que um 10K rápido, uma meia maratona competitiva ou um trail duro
+                possam entrar no mesmo ranking sem depender apenas da distância.
+              </p>
+              <p>
+                A liga dirige-se sobretudo aos atletas de mid pack: corredores que treinam com consistência,
+                evoluem prova após prova e raramente chegam aos pódios, mas merecem ver esse trabalho
+                reconhecido de forma objetiva.
+              </p>
+              <p>
+                Cada corredor submete uma prova validada por classificação oficial. A app cruza o tempo,
+                a posição, o tamanho do pelotão e a dificuldade do percurso para estimar uma pontuação final.
+              </p>
+            </div>
+            <div class="formula-panel">
+              <span>Fórmula base</span>
+              <strong>350 classificação + 300 ritmo + 200 dificuldade + 100 validação + 50 participação</strong>
+            </div>
+          </section>
+
+          <section class="rules-grid">
+            <article>
+              <span>01</span>
+              <h3>Submissão individual</h3>
+              <p>Cada corredor entra no seu perfil, escolhe a prova e regista tempo, classificação, finalistas, distância, terreno e altimetria.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Classificação oficial</h3>
+              <p>A posição oficial pesa na pontuação através do percentil: terminar melhor num pelotão maior vale mais.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Reconhecimento mid pack</h3>
+              <p>A liga valoriza progresso, consistência e bons resultados relativos, mesmo quando o corredor termina longe dos lugares de pódio.</p>
+            </article>
+            <article>
+              <span>04</span>
+              <h3>Performance por ritmo</h3>
+              <p>O ritmo é comparado com referências por distância, para premiar tempos fortes sem ignorar a escala da prova.</p>
+            </article>
+            <article>
+              <span>05</span>
+              <h3>Dificuldade da prova</h3>
+              <p>Altimetria, terreno, nível competitivo e número de finalistas aumentam ou reduzem o multiplicador de dificuldade.</p>
+            </article>
+            <article>
+              <span>06</span>
+              <h3>Validação</h3>
+              <p>O atleta submete o link da classificação oficial. A prova fica pendente até o acesso geral aprovar ou rejeitar.</p>
+            </article>
+            <article>
+              <span>07</span>
+              <h3>Ranking geral</h3>
+              <p>O ranking anual soma as 6 melhores provas de cada atleta. Atletas com menos de 3 provas aprovadas aparecem como ainda não elegíveis.</p>
+            </article>
+          </section>
+
+          <section class="scoring-table" aria-label="Componentes da pontuação">
+            <div class="section-title">
+              <h2>Componentes da pontuação</h2>
+              <span>Fórmula oficial</span>
+            </div>
+            <div class="table-row">
+              <strong>Resultado oficial</strong>
+              <span>Até 350 pontos pelo percentil calculado por posição e total de finalistas.</span>
+            </div>
+            <div class="table-row">
+              <strong>Performance</strong>
+              <span>Até 300 pontos pelo ritmo por quilómetro comparado com referências por distância.</span>
+            </div>
+            <div class="table-row">
+              <strong>Dificuldade</strong>
+              <span>Até 200 pontos, mais multiplicador por altimetria, terreno, nível competitivo e dimensão do pelotão.</span>
+            </div>
+            <div class="table-row">
+              <strong>Validação oficial</strong>
+              <span>100 pontos quando aprovada, 25 pontos enquanto pendente, 0 quando rejeitada. Participação aprovada ou pendente recebe 50 pontos.</span>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
