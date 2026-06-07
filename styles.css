@@ -1017,7 +1017,8 @@ progress::-moz-progress-bar {
   line-height: 1.45;
 }
 
-.support-card strong {
+.support-card > strong,
+.support-action strong {
   align-self: end;
   width: fit-content;
   padding: 8px 12px;
@@ -1026,6 +1027,36 @@ progress::-moz-progress-bar {
   border-radius: 6px;
   box-shadow: var(--tight-shadow);
   font-size: 1rem;
+}
+
+.payment-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.support-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.support-action:hover {
+  border-color: var(--track);
+  box-shadow: 0 0 0 3px rgba(31, 122, 224, 0.12);
+}
+
+.support-action-static {
+  cursor: default;
 }
 
 .coffee-card::after {
@@ -1046,7 +1077,8 @@ progress::-moz-progress-bar {
 .sponsor-card span,
 .sponsor-card h3,
 .sponsor-card p,
-.sponsor-card strong {
+.sponsor-card strong,
+.sponsor-card .support-action {
   grid-column: 1;
 }
 
@@ -1168,6 +1200,7 @@ progress::-moz-progress-bar {
   .sponsor-card h3,
   .sponsor-card p,
   .sponsor-card strong,
+  .sponsor-card .support-action,
   .sponsor-grid {
     grid-column: auto;
     grid-row: auto;
