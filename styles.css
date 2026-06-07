@@ -104,8 +104,8 @@ select:disabled {
 }
 
 .logo-speed,
-.logo-track,
-.logo-runner {
+.logo-orbit,
+.logo-monogram {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -120,23 +120,19 @@ select:disabled {
   stroke: rgba(255, 255, 255, 0.85);
 }
 
-.logo-track {
+.logo-orbit {
   stroke: #b9ecff;
   stroke-width: 5;
 }
 
-.logo-track-light {
+.logo-orbit-light {
   stroke: rgba(255, 255, 255, 0.9);
   stroke-width: 3;
 }
 
-.logo-head {
-  fill: #fff;
-}
-
-.logo-runner {
+.logo-monogram {
   stroke: #fff;
-  stroke-width: 4.5;
+  stroke-width: 5.2;
 }
 
 .eyebrow {

@@ -225,57 +225,114 @@ function drawRoute(result) {
   const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
 
-  const sky = ctx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, "#f8fbff");
-  sky.addColorStop(1, "#d7ebfa");
+  const sky = ctx.createLinearGradient(0, 0, width, height);
+  sky.addColorStop(0, "#071a33");
+  sky.addColorStop(0.48, "#0d3568");
+  sky.addColorStop(1, "#0a1326");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = "#b7d2e8";
-  ctx.beginPath();
-  ctx.moveTo(0, height * 0.7);
-  for (let x = 0; x <= width; x += 18) {
-    const y =
-      height * 0.64 +
-      Math.sin(x / 58) * 14 +
-      Math.cos(x / 105) * 10 -
-      clamp(result.elevation / 80, 0, 55);
-    ctx.lineTo(x, y);
+  const glow = ctx.createRadialGradient(width * 0.78, height * 0.26, 20, width * 0.78, height * 0.26, width * 0.55);
+  glow.addColorStop(0, "rgba(73, 200, 255, 0.36)");
+  glow.addColorStop(0.45, "rgba(31, 122, 224, 0.12)");
+  glow.addColorStop(1, "rgba(31, 122, 224, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.8;
+  ctx.strokeStyle = "rgba(126, 211, 255, 0.45)";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  for (let i = 0; i < 7; i += 1) {
+    const y = height * (0.45 + i * 0.085);
+    ctx.beginPath();
+    ctx.moveTo(-80, y + 95);
+    ctx.lineTo(width + 120, y - 88);
+    ctx.stroke();
   }
+  ctx.restore();
+
+  const track = ctx.createLinearGradient(0, height * 0.68, width, height);
+  track.addColorStop(0, "rgba(4, 18, 38, 0.84)");
+  track.addColorStop(1, "rgba(13, 79, 159, 0.4)");
+  ctx.fillStyle = track;
+  ctx.beginPath();
+  ctx.moveTo(0, height * 0.68);
+  ctx.lineTo(width, height * 0.44);
   ctx.lineTo(width, height);
   ctx.lineTo(0, height);
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#1f7ae0";
-  ctx.lineWidth = 16;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  for (let x = 65; x <= width - 65; x += 26) {
-    const y = height * 0.62 + Math.sin(x / 46) * 28 + Math.cos(x / 82) * 16;
-    if (x === 65) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-
-  ctx.strokeStyle = "rgba(255,255,255,0.65)";
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
   ctx.lineWidth = 3;
-  ctx.setLineDash([12, 12]);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  for (let i = 0; i < 5; i += 1) {
+    const y = height * (0.72 + i * 0.07);
+    ctx.beginPath();
+    ctx.moveTo(-60, y + i * 16);
+    ctx.lineTo(width * 0.62, y - 80 - i * 8);
+    ctx.stroke();
+  }
+  ctx.restore();
 
-  const runnerX = width * clamp(result.percentile, 0.12, 0.92);
-  const runnerY = height * 0.62 + Math.sin(runnerX / 46) * 28 + Math.cos(runnerX / 82) * 16;
-  ctx.fillStyle = "#10233f";
+  const runnerProgress = clamp(result.percentile, 0.1, 0.94);
+  const orbitCenterX = width * 0.58;
+  const orbitCenterY = height * 0.38;
+  const orbitRadius = width * 0.25;
+  const orbitStart = Math.PI * 1.1;
+  const orbitEnd = Math.PI * 1.92;
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = 15;
+  const orbitGradient = ctx.createLinearGradient(orbitCenterX - orbitRadius, orbitCenterY, orbitCenterX + orbitRadius, orbitCenterY);
+  orbitGradient.addColorStop(0, "#1f7ae0");
+  orbitGradient.addColorStop(1, "#7ed3ff");
+  ctx.strokeStyle = orbitGradient;
   ctx.beginPath();
-  ctx.arc(runnerX, runnerY - 20, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillRect(runnerX - 5, runnerY - 8, 10, 28);
+  ctx.arc(orbitCenterX, orbitCenterY, orbitRadius, orbitStart, orbitEnd);
+  ctx.stroke();
 
-  ctx.fillStyle = "#f2b84b";
-  ctx.fillRect(width - 88, 72, 9, 115);
-  ctx.fillStyle = "#10233f";
-  ctx.fillRect(width - 79, 72, 42, 28);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+  ctx.beginPath();
+  ctx.arc(orbitCenterX + 18, orbitCenterY, orbitRadius + 32, orbitStart + 0.08, orbitEnd - 0.05);
+  ctx.stroke();
+
+  for (let i = 0; i < 6; i += 1) {
+    const y = orbitCenterY - 76 + i * 25;
+    const lineWidth = 190 - i * 18;
+    ctx.strokeStyle = i % 2 ? "rgba(126, 211, 255, 0.78)" : "rgba(31, 122, 224, 0.78)";
+    ctx.lineWidth = i % 2 ? 5 : 8;
+    ctx.beginPath();
+    ctx.moveTo(orbitCenterX - orbitRadius - 190 - i * 18, y);
+    ctx.lineTo(orbitCenterX - orbitRadius - 190 + lineWidth, y);
+    ctx.stroke();
+  }
+
+  const angle = orbitStart + (orbitEnd - orbitStart) * runnerProgress;
+  const markerX = orbitCenterX + Math.cos(angle) * orbitRadius;
+  const markerY = orbitCenterY + Math.sin(angle) * orbitRadius;
+  const markerGlow = ctx.createRadialGradient(markerX, markerY, 3, markerX, markerY, 42);
+  markerGlow.addColorStop(0, "rgba(255,255,255,0.92)");
+  markerGlow.addColorStop(0.32, "rgba(126,211,255,0.55)");
+  markerGlow.addColorStop(1, "rgba(126,211,255,0)");
+  ctx.fillStyle = markerGlow;
+  ctx.beginPath();
+  ctx.arc(markerX, markerY, 42, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(markerX, markerY, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+  for (let x = 0; x < width; x += 44) {
+    ctx.fillRect(x, height - 30, 22, 30);
+  }
 }
 
 function renderCurrent() {
