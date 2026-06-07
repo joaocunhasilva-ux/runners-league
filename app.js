@@ -19,6 +19,7 @@ const viewTitle = document.querySelector("#view-title");
 const resetButton = document.querySelector("#reset");
 const navButtons = document.querySelectorAll("[data-view]");
 const appPages = document.querySelectorAll(".app-page");
+const langButtons = document.querySelectorAll("[data-lang]");
 const createRunnerForm = document.querySelector("#create-runner-form");
 const passwordForm = document.querySelector("#password-form");
 const adminPasswordForm = document.querySelector("#admin-password-form");
@@ -105,10 +106,344 @@ let runnerProfiles = [];
 let runnerAccountRows = [];
 let passwordResetRows = [];
 let selectedAthlete = null;
+let language = localStorage.getItem("runners-league-language") || "pt";
 let session = JSON.parse(localStorage.getItem("runners-league-session") || "null");
 if (session && !session.token) {
   session = null;
   localStorage.removeItem("runners-league-session");
+}
+
+const text = {
+  pt: {
+    athlete: "atleta",
+    athletes: "atletas",
+    runner: "Corredor",
+    general: "Geral",
+    race: "prova",
+    races: "provas",
+    points: "pontos",
+    pts: "pts",
+    officialRace: "Prova oficial",
+    approved: "Aprovada",
+    rejected: "Rejeitada",
+    pending: "Pendente",
+    rankingEmpty: "Sem ranking nesta época",
+    athleteProfile: "Perfil do atleta",
+    seasonTotal: "Total da época",
+    countingRaces: "Provas a contar",
+    approvedShort: "Aprovadas",
+    eligibility: "Elegibilidade",
+    eligible: "Elegível",
+    pendingShort: "Pendente",
+    rankingCounting: "Contam para o ranking",
+    outsideTopSix: "Fora das 6 melhores",
+    rejectedPlural: "Rejeitadas",
+    noCategoryRaces: "Sem provas nesta categoria.",
+    seasonRanking: "Ranking da época",
+    submittedRace: "prova submetida",
+    submittedRaces: "provas submetidas",
+    notEligible: "Ainda não elegível",
+    approvedRaces: "provas aprovadas",
+    average: "média",
+    noAthletes: "Sem atletas com provas",
+    individualHistory: "Histórico individual",
+    recentSubmissions: "Submissões recentes",
+    classified: "classificados",
+    noSubmittedRaces: "Sem provas submetidas",
+    provisionalPoints: "pts provisórios",
+    officialClassification: "Classificação oficial",
+    approve: "Aprovar",
+    reject: "Rejeitar",
+    noPendingRaces: "Sem provas pendentes",
+    noRunners: "Sem atletas",
+    requestAt: "Pedido em",
+    newPassword: "Nova password",
+    setPassword: "Definir password",
+    noPendingRequests: "Sem pedidos pendentes",
+    loginTitle: "Entrar na liga",
+    publicRanking: "Ranking público",
+    pointsRanking: "Ranking por pontos",
+    generalAccess: "Acesso geral",
+    raceSubmission: "Submissão de prova",
+    leagueManagement: "Gestão da liga",
+    personalArea: "Área individual",
+    generalPointsRanking: "Ranking geral por pontos",
+    myRaces: "As minhas provas",
+    recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
+    databaseError: "Erro na base de dados",
+    deleteRaceConfirm: (raceName) => `Apagar "${raceName || "esta prova"}"?`,
+  },
+  en: {
+    athlete: "athlete",
+    athletes: "athletes",
+    runner: "Runner",
+    general: "General",
+    race: "race",
+    races: "races",
+    points: "points",
+    pts: "pts",
+    officialRace: "Official race",
+    approved: "Approved",
+    rejected: "Rejected",
+    pending: "Pending",
+    rankingEmpty: "No ranking for this season",
+    athleteProfile: "Athlete profile",
+    seasonTotal: "Season total",
+    countingRaces: "Counting races",
+    approvedShort: "Approved",
+    eligibility: "Eligibility",
+    eligible: "Eligible",
+    pendingShort: "Pending",
+    rankingCounting: "Counting for the ranking",
+    outsideTopSix: "Outside the top 6",
+    rejectedPlural: "Rejected",
+    noCategoryRaces: "No races in this category.",
+    seasonRanking: "Season ranking",
+    submittedRace: "submitted race",
+    submittedRaces: "submitted races",
+    notEligible: "Not eligible yet",
+    approvedRaces: "approved races",
+    average: "average",
+    noAthletes: "No athletes with races",
+    individualHistory: "Individual history",
+    recentSubmissions: "Recent submissions",
+    classified: "finishers",
+    noSubmittedRaces: "No submitted races",
+    provisionalPoints: "provisional pts",
+    officialClassification: "Official classification",
+    approve: "Approve",
+    reject: "Reject",
+    noPendingRaces: "No pending races",
+    noRunners: "No athletes",
+    requestAt: "Requested at",
+    newPassword: "New password",
+    setPassword: "Set password",
+    noPendingRequests: "No pending requests",
+    loginTitle: "Enter the league",
+    publicRanking: "Public ranking",
+    pointsRanking: "Points ranking",
+    generalAccess: "General access",
+    raceSubmission: "Race submission",
+    leagueManagement: "League management",
+    personalArea: "Individual area",
+    generalPointsRanking: "Overall points ranking",
+    myRaces: "My races",
+    recoverRunnerProfile: "Select a runner profile to request password recovery.",
+    databaseError: "Database error",
+    deleteRaceConfirm: (raceName) => `Delete "${raceName || "this race"}"?`,
+  },
+};
+
+const staticText = {
+  "Liga": "League",
+  "Conceito e regras": "Concept and rules",
+  "Acesso": "Access",
+  "Corredor": "Runner",
+  "Geral": "General",
+  "Perfil": "Profile",
+  "Password": "Password",
+  "Entrar": "Enter",
+  "Recuperar password": "Recover password",
+  "Total de provas": "Total races",
+  "Corredores ativos": "Active runners",
+  "Média de pontos": "Average points",
+  "Criar atleta": "Create athlete",
+  "Nome": "Name",
+  "Password inicial": "Initial password",
+  "Alterar password de atleta": "Change athlete password",
+  "Atleta": "Athlete",
+  "Nova password": "New password",
+  "Guardar password": "Save password",
+  "Password do acesso geral": "General access password",
+  "Password atual": "Current password",
+  "Guardar password geral": "Save general password",
+  "Recuperação de passwords": "Password recovery",
+  "Atletas registados": "Registered athletes",
+  "Provas pendentes": "Pending races",
+  "Pesquisar": "Search",
+  "Editar prova": "Edit race",
+  "Estado": "Status",
+  "Todos": "All",
+  "Pendentes": "Pending",
+  "Aprovadas": "Approved",
+  "Rejeitadas": "Rejected",
+  "Prova": "Race",
+  "Nome da prova": "Race name",
+  "Link oficial": "Official link",
+  "Distância": "Distance",
+  "Tempo total": "Total time",
+  "Classificação": "Ranking",
+  "Finalistas": "Finishers",
+  "Altimetria": "Elevation",
+  "Época": "Season",
+  "Guardar": "Save",
+  "Apagar": "Delete",
+  "Prova oficial": "Official race",
+  "Link da classificação oficial": "Official classification link",
+  "Meia maratona": "Half marathon",
+  "Maratona": "Marathon",
+  "Outra": "Other",
+  "Horas": "Hours",
+  "Min.": "Min.",
+  "Seg.": "Sec.",
+  "Altimetria positiva": "Positive elevation",
+  "Nível competitivo": "Competitive level",
+  "Local": "Local",
+  "Regional": "Regional",
+  "Nacional": "National",
+  "Internacional": "International",
+  "Terreno": "Terrain",
+  "Estrada": "Road",
+  "Trail": "Trail",
+  "Pista": "Track",
+  "A prova fica pendente até ser aprovada pelo acesso geral.": "The race stays pending until it is approved by general access.",
+  "Submeter prova": "Submit race",
+  "Ranking público": "Public ranking",
+  "Ranking por pontos": "Points ranking",
+  "Pontuação estimada": "Estimated score",
+  "pontos": "points",
+  "Ritmo": "Pace",
+  "Percentil": "Percentile",
+  "Dificuldade": "Difficulty",
+  "As 6 melhores provas de cada atleta contam para a época.": "Each athlete's best 6 races count for the season.",
+  "Atletas com menos de 3 provas aprovadas aparecem no ranking, mas ainda não são elegíveis para prémios finais.": "Athletes with fewer than 3 approved races appear in the ranking, but are not yet eligible for final prizes.",
+  "Resultado oficial": "Official result",
+  "Performance": "Performance",
+  "Bónus validação": "Validation bonus",
+  "Ranking da época": "Season ranking",
+  "0 atletas": "0 athletes",
+  "Conceito": "Concept",
+  "Uma liga justa entre provas diferentes": "A fair league across different races",
+  "A Runners League transforma resultados oficiais de corrida numa pontuação comparável. O objetivo é permitir que um 10K rápido, uma meia maratona competitiva ou um trail duro possam entrar no mesmo ranking sem depender apenas da distância.": "Runners League turns official race results into comparable scores. The goal is to let a fast 10K, a competitive half marathon or a tough trail race enter the same ranking without depending only on distance.",
+  "A liga dirige-se sobretudo aos atletas de mid pack: corredores que treinam com consistência, evoluem prova após prova e raramente chegam aos pódios, mas merecem ver esse trabalho reconhecido de forma objetiva.": "The league is built especially for mid-pack athletes: runners who train consistently, improve race after race and rarely reach the podium, but deserve to see that work recognised objectively.",
+  "Cada corredor submete uma prova validada por classificação oficial. A app cruza o tempo, a posição, o tamanho do pelotão e a dificuldade do percurso para estimar uma pontuação final.": "Each runner submits a race validated by an official classification. The app combines time, position, field size and course difficulty to estimate a final score.",
+  "Fórmula base": "Base formula",
+  "350 classificação + 300 ritmo + 200 dificuldade + 100 validação + 50 participação": "350 ranking + 300 pace + 200 difficulty + 100 validation + 50 participation",
+  "Submissão individual": "Individual submission",
+  "Cada corredor entra no seu perfil, escolhe a prova e regista tempo, classificação, finalistas, distância, terreno e altimetria.": "Each runner enters their profile, chooses the race and records time, ranking, finishers, distance, terrain and elevation.",
+  "Classificação oficial": "Official classification",
+  "A posição oficial pesa na pontuação através do percentil: terminar melhor num pelotão maior vale mais.": "Official position affects the score through percentile: finishing better in a larger field is worth more.",
+  "Reconhecimento mid pack": "Mid-pack recognition",
+  "A liga valoriza progresso, consistência e bons resultados relativos, mesmo quando o corredor termina longe dos lugares de pódio.": "The league values progress, consistency and strong relative results, even when the runner finishes far from podium places.",
+  "Performance por ritmo": "Pace performance",
+  "O ritmo é comparado com referências por distância, para premiar tempos fortes sem ignorar a escala da prova.": "Pace is compared with distance benchmarks, rewarding strong times without ignoring race scale.",
+  "Dificuldade da prova": "Race difficulty",
+  "Altimetria, terreno, nível competitivo e número de finalistas aumentam ou reduzem o multiplicador de dificuldade.": "Elevation, terrain, competitive level and number of finishers increase or reduce the difficulty multiplier.",
+  "Validação": "Validation",
+  "O atleta submete o link da classificação oficial. A prova fica pendente até o acesso geral aprovar ou rejeitar.": "The athlete submits the official classification link. The race stays pending until general access approves or rejects it.",
+  "Ranking geral": "Overall ranking",
+  "O ranking anual soma as 6 melhores provas de cada atleta. Atletas com menos de 3 provas aprovadas aparecem como ainda não elegíveis.": "The yearly ranking adds each athlete's best 6 races. Athletes with fewer than 3 approved races appear as not yet eligible.",
+  "Apoiar": "Support",
+  "Paga-me um café": "Buy me a coffee",
+  "Um contributo simbólico de 2€ ajuda a manter a liga online, melhorar a experiência e continuar a desenvolver novas funcionalidades.": "A symbolic 2€ contribution helps keep the league online, improve the experience and continue developing new features.",
+  "Patrocínios": "Sponsorships",
+  "Espaço para anunciantes": "Space for advertisers",
+  "Marcas locais, clubes e parceiros podem comprar quadrados na grelha de patrocinadores. Cada quadrado custa 2€ e pode formar blocos maiores.": "Local brands, clubs and partners can buy squares in the sponsor grid. Each square costs 2€ and can form larger blocks.",
+  "2€ / quadrado": "2€ / square",
+  "Componentes da pontuação": "Scoring components",
+  "Fórmula oficial": "Official formula",
+  "Até 350 pontos pelo percentil calculado por posição e total de finalistas.": "Up to 350 points for percentile calculated from position and total finishers.",
+  "Até 300 pontos pelo ritmo por quilómetro comparado com referências por distância.": "Up to 300 points for pace per kilometre compared with distance benchmarks.",
+  "Até 200 pontos, mais multiplicador por altimetria, terreno, nível competitivo e dimensão do pelotão.": "Up to 200 points, plus multiplier for elevation, terrain, competitive level and field size.",
+  "Validação oficial": "Official validation",
+  "100 pontos quando aprovada, 25 pontos enquanto pendente, 0 quando rejeitada. Participação aprovada ou pendente recebe 50 pontos.": "100 points when approved, 25 while pending, 0 when rejected. Approved or pending participation receives 50 points.",
+};
+
+const staticAttributes = {
+  "Sessão e submissão": "Session and submission",
+  "Navegação principal": "Main navigation",
+  "Idioma": "Language",
+  "Sair": "Logout",
+  "Atleta ou prova": "Athlete or race",
+  "Limpar submissões": "Clear submissions",
+  "Visualização da prova": "Race visualisation",
+  "Conceito e regras": "Concept and rules",
+  "Apoiar a Runners League": "Support Runners League",
+  "Componentes da pontuação": "Scoring components",
+};
+
+const serverText = {
+  "Credenciais inválidas": "Invalid credentials",
+  "Só o acesso geral pode ver pedidos de recuperação": "Only general access can view recovery requests",
+  "Submissão incompleta": "Incomplete submission",
+  "A classificação não pode ser superior ao número de finalistas": "Ranking cannot be higher than the number of finishers",
+  "É obrigatório indicar o link da classificação oficial": "The official classification link is required",
+  "Só atletas podem submeter provas": "Only athletes can submit races",
+  "Só o acesso geral pode limpar submissões": "Only general access can clear submissions",
+  "Só o acesso geral pode editar provas": "Only general access can edit races",
+  "Submissão não encontrada": "Submission not found",
+  "Só o acesso geral pode apagar provas": "Only general access can delete races",
+  "Só o acesso geral pode criar atletas": "Only general access can create athletes",
+  "Só o acesso geral pode alterar passwords": "Only general access can change passwords",
+  "Atleta não encontrado": "Athlete not found",
+  "Password do acesso geral atualizada.": "General access password updated.",
+  "Pedido registado. O acesso geral pode agora definir uma nova password.": "Request registered. General access can now set a new password.",
+  "Só o acesso geral pode resolver pedidos de recuperação": "Only general access can resolve recovery requests",
+  "Pedido de recuperação não encontrado": "Recovery request not found",
+  "Só o acesso geral pode validar provas": "Only general access can validate races",
+  "Estado de validação inválido": "Invalid validation status",
+  "Sessão inválida ou expirada": "Invalid or expired session",
+  "Só o acesso geral pode ver atletas": "Only general access can view athletes",
+};
+
+const staticNodes = [];
+const staticAttributeNodes = [];
+
+function normalizeStaticValue(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function collectStaticText(node = document.body) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const original = normalizeStaticValue(node.nodeValue);
+    if (original) staticNodes.push({ node, original });
+    return;
+  }
+  if (!node.childNodes || ["SCRIPT", "STYLE"].includes(node.nodeName)) return;
+  node.childNodes.forEach((child) => collectStaticText(child));
+}
+
+function collectStaticAttributes() {
+  document.querySelectorAll("[placeholder], [title], [aria-label]").forEach((element) => {
+    ["placeholder", "title", "aria-label"].forEach((attribute) => {
+      if (!element.hasAttribute(attribute)) return;
+      staticAttributeNodes.push({
+        element,
+        attribute,
+        original: normalizeStaticValue(element.getAttribute(attribute)),
+      });
+    });
+  });
+}
+
+function t(key, ...args) {
+  const value = text[language][key] ?? text.pt[key] ?? key;
+  return typeof value === "function" ? value(...args) : value;
+}
+
+function localizeServerMessage(message) {
+  if (language === "pt") return message;
+  return serverText[message] || message;
+}
+
+function translateStaticContent() {
+  document.documentElement.lang = language;
+  langButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.lang === language);
+  });
+  staticNodes.forEach(({ node, original }) => {
+    node.nodeValue = language === "pt" ? original : staticText[original] || original;
+  });
+  staticAttributeNodes.forEach(({ element, attribute, original }) => {
+    element.setAttribute(attribute, language === "pt" ? original : staticAttributes[original] || original);
+  });
+}
+
+function setLanguage(nextLanguage) {
+  language = nextLanguage;
+  localStorage.setItem("runners-league-language", language);
+  translateStaticContent();
+  renderSession();
 }
 
 function clamp(value, min, max) {
@@ -154,8 +489,8 @@ function getAccessMode() {
 function readRace() {
   const distanceKm = resolveDistance();
   return {
-    runner: fields.runner.value.trim() || "Corredor",
-    raceName: fields.raceName.value.trim() || "Prova oficial",
+    runner: fields.runner.value.trim() || t("runner"),
+    raceName: fields.raceName.value.trim() || t("officialRace"),
     officialUrl: fields.officialUrl.value.trim(),
     distanceKm,
     totalSeconds:
@@ -338,7 +673,7 @@ function drawRoute(result) {
 function renderCurrent() {
   const sourceRace = session?.type === "general" ? topRace() || readRace() : readRace();
   const result = calculateRace(sourceRace);
-  output.score.textContent = result.total.toLocaleString("pt-PT");
+  output.score.textContent = result.total.toLocaleString(language === "pt" ? "pt-PT" : "en-GB");
   output.pace.textContent = formatPace(result.paceSeconds);
   output.percentile.textContent = `${Math.round(result.percentile * 100)}%`;
   output.difficulty.textContent = `${result.difficultyFactor.toFixed(2)}x`;
@@ -361,14 +696,14 @@ function visibleSubmissions() {
 }
 
 function validationLabel(race) {
-  if (race.validationStatus === "approved") return "Aprovada";
-  if (race.validationStatus === "rejected") return "Rejeitada";
-  return "Pendente";
+  if (race.validationStatus === "approved") return t("approved");
+  if (race.validationStatus === "rejected") return t("rejected");
+  return t("pending");
 }
 
 function formatDateTime(value) {
   if (!value) return "";
-  return new Date(`${value}Z`).toLocaleString("pt-PT", {
+  return new Date(`${value}Z`).toLocaleString(language === "pt" ? "pt-PT" : "en-GB", {
     dateStyle: "short",
     timeStyle: "short",
   });
@@ -440,7 +775,7 @@ function renderTopThree(rows) {
           `
         )
         .join("")
-    : `<div class="podium-item empty-state"><strong>Sem ranking nesta época</strong></div>`;
+    : `<div class="podium-item empty-state"><strong>${t("rankingEmpty")}</strong></div>`;
 }
 
 function renderAthleteProfile(runner) {
@@ -462,26 +797,26 @@ function renderAthleteProfile(runner) {
   athleteProfile.innerHTML = `
     <div class="section-title">
       <div>
-        <p class="eyebrow">Perfil do atleta</p>
+        <p class="eyebrow">${t("athleteProfile")}</p>
         <h2>${escapeHtml(runner)}</h2>
       </div>
       <span>${selectedSeason}</span>
     </div>
     <div class="profile-stats">
-      <div><span>Total da época</span><strong>${Math.round(score)}</strong></div>
-      <div><span>Provas a contar</span><strong>${counting.length}/6</strong></div>
-      <div><span>Aprovadas</span><strong>${approved}/3</strong></div>
-      <div><span>Elegibilidade</span><strong>${approved >= 3 ? "Elegível" : "Pendente"}</strong></div>
+      <div><span>${t("seasonTotal")}</span><strong>${Math.round(score)}</strong></div>
+      <div><span>${t("countingRaces")}</span><strong>${counting.length}/6</strong></div>
+      <div><span>${t("approvedShort")}</span><strong>${approved}/3</strong></div>
+      <div><span>${t("eligibility")}</span><strong>${approved >= 3 ? t("eligible") : t("pendingShort")}</strong></div>
     </div>
     <div class="profile-columns">
       <div>
-        <h3>Contam para o ranking</h3>
+        <h3>${t("rankingCounting")}</h3>
         ${renderProfileRaceList(counting)}
       </div>
       <div>
-        <h3>Fora das 6 melhores</h3>
+        <h3>${t("outsideTopSix")}</h3>
         ${renderProfileRaceList(outside)}
-        <h3>Rejeitadas</h3>
+        <h3>${t("rejectedPlural")}</h3>
         ${renderProfileRaceList(rejected)}
       </div>
     </div>
@@ -501,14 +836,14 @@ function renderProfileRaceList(races) {
           `
         )
         .join("")}</div>`
-    : `<p class="form-note">Sem provas nesta categoria.</p>`;
+    : `<p class="form-note">${t("noCategoryRaces")}</p>`;
 }
 
 function renderRanking() {
   const rows = rankingRows();
   renderTopThree(rows);
-  output.submissionsTitle.textContent = "Ranking da época";
-  output.submissionCount.textContent = `${rows.length} ${rows.length === 1 ? "atleta" : "atletas"}`;
+  output.submissionsTitle.textContent = t("seasonRanking");
+  output.submissionCount.textContent = `${rows.length} ${rows.length === 1 ? t("athlete") : t("athletes")}`;
   output.submissionsList.innerHTML = rows.length
     ? rows
         .map(
@@ -516,15 +851,15 @@ function renderRanking() {
             <button class="submission-item ranking-button" type="button" data-athlete="${escapeHtml(row.runner)}">
               <div class="submission-title">
                 <strong>${index + 1}. ${escapeHtml(row.runner)}</strong>
-                <span>${row.countingRaces}/6 provas a contar · ${row.totalRaces} ${row.totalRaces === 1 ? "prova submetida" : "provas submetidas"}</span>
-                <span class="submission-meta">${row.eligible ? "Elegível" : "Ainda não elegível"} · ${row.validatedCount}/3 provas aprovadas · média ${Math.round(row.average)} pts</span>
+                <span>${row.countingRaces}/6 ${t("countingRaces").toLowerCase()} · ${row.totalRaces} ${row.totalRaces === 1 ? t("submittedRace") : t("submittedRaces")}</span>
+                <span class="submission-meta">${row.eligible ? t("eligible") : t("notEligible")} · ${row.validatedCount}/3 ${t("approvedRaces")} · ${t("average")} ${Math.round(row.average)} ${t("pts")}</span>
               </div>
               <div class="submission-score">${Math.round(row.score)}</div>
             </button>
           `
         )
         .join("")
-    : `<article class="submission-item empty-state"><strong>Sem atletas com provas</strong></article>`;
+    : `<article class="submission-item empty-state"><strong>${t("noAthletes")}</strong></article>`;
   if (!rows.some((row) => row.runner === selectedAthlete)) selectedAthlete = rows[0]?.runner || null;
   renderAthleteProfile(selectedAthlete);
 }
@@ -533,8 +868,8 @@ function renderRaceHistory() {
   const scored = visibleSubmissions().map(calculateRace).sort((a, b) => b.total - a.total);
   topThree.innerHTML = "";
   renderAthleteProfile(null);
-  output.submissionsTitle.textContent = session?.type === "runner" ? "Histórico individual" : "Submissões recentes";
-  output.submissionCount.textContent = `${scored.length} ${scored.length === 1 ? "prova" : "provas"}`;
+  output.submissionsTitle.textContent = session?.type === "runner" ? t("individualHistory") : t("recentSubmissions");
+  output.submissionCount.textContent = `${scored.length} ${scored.length === 1 ? t("race") : t("races")}`;
   output.submissionsList.innerHTML = scored.length
     ? scored
         .map(
@@ -543,14 +878,14 @@ function renderRaceHistory() {
               <div class="submission-title">
                 <strong>${index + 1}. ${escapeHtml(item.runner)}</strong>
                 <span>${escapeHtml(item.raceName)} · ${item.distanceKm.toFixed(item.distanceKm % 1 ? 1 : 0)} km · ${formatPace(item.paceSeconds)}</span>
-                <span class="submission-meta">${item.safeRank}/${item.finishers} classificados · ${Math.round(item.elevation)} m D+ · ${validationLabel(item)}</span>
+                <span class="submission-meta">${item.safeRank}/${item.finishers} ${t("classified")} · ${Math.round(item.elevation)} m D+ · ${validationLabel(item)}</span>
               </div>
               <div class="submission-score">${item.total}</div>
             </article>
           `
         )
         .join("")
-    : `<article class="submission-item empty-state"><strong>Sem provas submetidas</strong></article>`;
+    : `<article class="submission-item empty-state"><strong>${t("noSubmittedRaces")}</strong></article>`;
 }
 
 function renderSeasonFilter() {
@@ -588,18 +923,18 @@ function renderPendingValidations() {
             <article class="validation-item">
               <div>
                 <strong>${escapeHtml(race.runner)}</strong>
-                <span>${escapeHtml(race.raceName)} · ${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km · ${race.total} pts provisórios</span>
-                <a href="${escapeHtml(race.officialUrl)}" target="_blank" rel="noreferrer">Classificação oficial</a>
+                <span>${escapeHtml(race.raceName)} · ${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km · ${race.total} ${t("provisionalPoints")}</span>
+                <a href="${escapeHtml(race.officialUrl)}" target="_blank" rel="noreferrer">${t("officialClassification")}</a>
               </div>
               <div class="validation-actions">
-                <button type="button" data-validation-id="${race.id}" data-validation-status="approved">Aprovar</button>
-                <button type="button" data-validation-id="${race.id}" data-validation-status="rejected">Rejeitar</button>
+                <button type="button" data-validation-id="${race.id}" data-validation-status="approved">${t("approve")}</button>
+                <button type="button" data-validation-id="${race.id}" data-validation-status="rejected">${t("reject")}</button>
               </div>
             </article>
           `
         )
         .join("")
-    : `<article class="validation-item empty-state"><strong>Sem provas pendentes</strong></article>`;
+    : `<article class="validation-item empty-state"><strong>${t("noPendingRaces")}</strong></article>`;
 }
 
 function renderEditSubmissionOptions() {
@@ -694,12 +1029,12 @@ function renderRunnerAccounts(runners = runnerAccountRows) {
           (runner) => `
             <article class="runner-account">
               <strong>${escapeHtml(runner.name)}</strong>
-              <span>${runner.submissions} ${runner.submissions === 1 ? "prova" : "provas"}</span>
+              <span>${runner.submissions} ${runner.submissions === 1 ? t("race") : t("races")}</span>
             </article>
           `
         )
         .join("")
-    : `<article class="runner-account"><strong>Sem atletas</strong></article>`;
+    : `<article class="runner-account"><strong>${t("noRunners")}</strong></article>`;
 }
 
 function renderPasswordResetRequests(requests = passwordResetRows) {
@@ -712,21 +1047,21 @@ function renderPasswordResetRequests(requests = passwordResetRows) {
             <article class="reset-request">
               <div>
                 <strong>${escapeHtml(request.runner)}</strong>
-                <span>Pedido em ${escapeHtml(formatDateTime(request.requestedAt))}</span>
+                <span>${t("requestAt")} ${escapeHtml(formatDateTime(request.requestedAt))}</span>
               </div>
               <label>
-                Nova password
+                ${t("newPassword")}
                 <input data-reset-password="${request.id}" type="password" autocomplete="new-password" />
               </label>
               <button class="primary-action compact-action" type="button" data-reset-id="${request.id}">
                 <span aria-hidden="true">✓</span>
-                Definir password
+                ${t("setPassword")}
               </button>
             </article>
           `
         )
         .join("")
-    : `<article class="reset-request empty-state"><strong>Sem pedidos pendentes</strong></article>`;
+    : `<article class="reset-request empty-state"><strong>${t("noPendingRequests")}</strong></article>`;
 }
 
 function renderSession() {
@@ -738,20 +1073,20 @@ function renderSession() {
   resetButton.classList.toggle("hidden", !loggedIn || session.type !== "general");
 
   if (!loggedIn) {
-    panelTitle.textContent = "Entrar na liga";
-    viewEyebrow.textContent = "Ranking público";
-    viewTitle.textContent = "Ranking por pontos";
+    panelTitle.textContent = t("loginTitle");
+    viewEyebrow.textContent = t("publicRanking");
+    viewTitle.textContent = t("pointsRanking");
     renderSubmissions();
     renderCurrent();
     return;
   }
 
   const isGeneral = session.type === "general";
-  panelTitle.textContent = isGeneral ? "Acesso geral" : "Submissão de prova";
-  output.sessionRole.textContent = isGeneral ? "Geral" : "Corredor";
+  panelTitle.textContent = isGeneral ? t("generalAccess") : t("raceSubmission");
+  output.sessionRole.textContent = isGeneral ? t("general") : t("runner");
   output.sessionName.textContent = session.name;
-  viewEyebrow.textContent = isGeneral ? "Gestão da liga" : "Área individual";
-  viewTitle.textContent = isGeneral ? "Ranking geral por pontos" : "As minhas provas";
+  viewEyebrow.textContent = isGeneral ? t("leagueManagement") : t("personalArea");
+  viewTitle.textContent = isGeneral ? t("generalPointsRanking") : t("myRaces");
   fields.runner.value = isGeneral ? fields.runner.value : session.name;
 
   renderAdminStats();
@@ -780,7 +1115,8 @@ async function apiRequest(path, options = {}) {
     headers,
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Erro na base de dados");
+  if (data.message) data.message = localizeServerMessage(data.message);
+  if (!response.ok) throw new Error(localizeServerMessage(data.error) || t("databaseError"));
   return data;
 }
 
@@ -832,6 +1168,10 @@ navButtons.forEach((button) => {
   button.addEventListener("click", () => showView(button.dataset.view));
 });
 
+langButtons.forEach((button) => {
+  button.addEventListener("click", () => setLanguage(button.dataset.lang));
+});
+
 seasonFilter.addEventListener("change", () => {
   selectedSeason = Number(seasonFilter.value);
   selectedAthlete = null;
@@ -860,7 +1200,7 @@ document.querySelectorAll("input[name='access']").forEach((input) => {
 
 passwordResetRequestButton.addEventListener("click", async () => {
   if (getAccessMode() !== "runner") {
-    loginMessage.textContent = "Seleciona um perfil de corredor para pedir recuperação.";
+    loginMessage.textContent = t("recoverRunnerProfile");
     return;
   }
   const data = await apiRequest("/api/password-reset/request", {
@@ -1050,7 +1390,7 @@ editSubmissionForm.addEventListener("submit", async (event) => {
 deleteSubmissionButton.addEventListener("click", async () => {
   if (!editSubmissionSelect.value) return;
   const race = submissions.find((item) => String(item.id) === String(editSubmissionSelect.value));
-  if (!window.confirm(`Apagar "${race?.raceName || "esta prova"}"?`)) return;
+  if (!window.confirm(t("deleteRaceConfirm", race?.raceName))) return;
   const data = await apiRequest("/api/submissions/delete", {
     method: "POST",
     body: JSON.stringify({ id: Number(editSubmissionSelect.value) }),
@@ -1063,6 +1403,10 @@ deleteSubmissionButton.addEventListener("click", async () => {
   renderCurrent();
   renderPendingValidations();
 });
+
+collectStaticText();
+collectStaticAttributes();
+translateStaticContent();
 
 if (session?.type === "runner") fields.runner.value = session.name;
 loadDatabaseState().catch((error) => {

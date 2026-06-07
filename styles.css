@@ -191,6 +191,34 @@ form {
   box-shadow: var(--tight-shadow);
 }
 
+.language-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 142px;
+  margin: -8px 0 20px auto;
+  padding: 4px;
+  background: #fbfcfb;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.lang-button {
+  min-height: 30px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lang-button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+}
+
 label,
 legend {
   color: var(--muted);
@@ -951,6 +979,114 @@ progress::-moz-progress-bar {
   line-height: 1.45;
 }
 
+.support-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: 10px;
+}
+
+.support-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 220px;
+  padding: 18px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff, #f2f8ff);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  position: relative;
+}
+
+.support-card span {
+  color: var(--track-dark);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.support-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.support-card p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.support-card strong {
+  align-self: end;
+  width: fit-content;
+  padding: 8px 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+  border-radius: 6px;
+  box-shadow: var(--tight-shadow);
+  font-size: 1rem;
+}
+
+.coffee-card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -54px;
+  width: 170px;
+  height: 170px;
+  border: 24px solid rgba(31, 122, 224, 0.12);
+  border-radius: 50%;
+}
+
+.sponsor-card {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 180px);
+}
+
+.sponsor-card span,
+.sponsor-card h3,
+.sponsor-card p,
+.sponsor-card strong {
+  grid-column: 1;
+}
+
+.sponsor-grid {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  padding: 12px;
+  background: #e8f3fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.sponsor-grid i {
+  display: block;
+  aspect-ratio: 1;
+  background: #fff;
+  border: 1px solid #c9ddeb;
+  border-radius: 4px;
+}
+
+.sponsor-grid i:nth-child(2),
+.sponsor-grid i:nth-child(3),
+.sponsor-grid i:nth-child(8),
+.sponsor-grid i:nth-child(9) {
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+  border-color: transparent;
+}
+
+.sponsor-grid i:nth-child(16),
+.sponsor-grid i:nth-child(17),
+.sponsor-grid i:nth-child(22),
+.sponsor-grid i:nth-child(23) {
+  background: linear-gradient(135deg, var(--teal), #7ed3ff);
+  border-color: transparent;
+}
+
 .scoring-table {
   display: grid;
   overflow: hidden;
@@ -1019,11 +1155,22 @@ progress::-moz-progress-bar {
   .time-grid,
   .concept-hero,
   .rules-grid,
+  .support-grid,
+  .sponsor-card,
   .table-row,
   .public-summary,
   .profile-stats,
   .profile-columns {
     grid-template-columns: 1fr;
+  }
+
+  .sponsor-card span,
+  .sponsor-card h3,
+  .sponsor-card p,
+  .sponsor-card strong,
+  .sponsor-grid {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .side-nav {
