@@ -137,6 +137,42 @@ Montar o volume persistente em:
 
 Estas variáveis só são usadas quando a base de dados ainda não existe. Depois de criada, as passwords devem ser geridas pela área `Geral`.
 
+## PythonAnywhere
+
+Para publicar no PythonAnywhere:
+
+1. Abrir uma consola Bash.
+2. Clonar o repositório:
+
+```bash
+git clone https://github.com/joaocunhasilva-ux/runners-league.git
+```
+
+3. Criar uma Web App manual com Python.
+4. No ficheiro WSGI do PythonAnywhere, apontar para o `wsgi.py` deste projeto:
+
+```python
+import sys
+path = "/home/teu-utilizador/runners-league"
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+from wsgi import application
+```
+
+5. Definir a variável `RUNNERS_LEAGUE_DB` para um caminho persistente da conta, por exemplo:
+
+```text
+/home/teu-utilizador/runners_league.db
+```
+
+As passwords iniciais também podem ser definidas por variáveis de ambiente antes da primeira criação da base de dados:
+
+```text
+RUNNERS_LEAGUE_DEFAULT_ADMIN_PASSWORD=password-inicial-segura
+RUNNERS_LEAGUE_DEFAULT_RUNNER_PASSWORD=password-inicial-segura
+```
+
 ## Nota importante
 
 O login já é validado no servidor, a área geral já permite gerir atletas e a recuperação de password já existe por validação do administrador. Antes de abrir a app ao público, devem ser trocadas as passwords iniciais por credenciais individuais.
