@@ -119,6 +119,24 @@ Em plataformas com disco persistente, definir também:
 RUNNERS_LEAGUE_DB=/caminho/persistente/runners_league.db
 ```
 
+## Railway
+
+Para publicar no Railway com volume persistente:
+
+```text
+RUNNERS_LEAGUE_DB=/data/runners_league.db
+RUNNERS_LEAGUE_DEFAULT_ADMIN_PASSWORD=password-inicial-segura
+RUNNERS_LEAGUE_DEFAULT_RUNNER_PASSWORD=password-inicial-segura
+```
+
+Montar o volume persistente em:
+
+```text
+/data
+```
+
+Estas variáveis só são usadas quando a base de dados ainda não existe. Depois de criada, as passwords devem ser geridas pela área `Geral`.
+
 ## Nota importante
 
 O login já é validado no servidor, a área geral já permite gerir atletas e a recuperação de password já existe por validação do administrador. Antes de abrir a app ao público, devem ser trocadas as passwords iniciais por credenciais individuais.

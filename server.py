@@ -15,8 +15,8 @@ CURRENT_YEAR = date.today().year
 
 
 DEFAULT_RUNNERS = ["João Silva", "Mariana Costa", "Rui Martins"]
-DEFAULT_RUNNER_PASSWORD = "runner123"
-DEFAULT_ADMIN_PASSWORD = "admin123"
+DEFAULT_RUNNER_PASSWORD = os.environ.get("RUNNERS_LEAGUE_DEFAULT_RUNNER_PASSWORD", "runner123")
+DEFAULT_ADMIN_PASSWORD = os.environ.get("RUNNERS_LEAGUE_DEFAULT_ADMIN_PASSWORD", "admin123")
 DEFAULT_SUBMISSIONS = [
     {
         "runner": "Mariana Costa",
@@ -64,6 +64,7 @@ DEFAULT_SUBMISSIONS = [
 
 
 def connect():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     return connection
