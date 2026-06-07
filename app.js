@@ -226,12 +226,12 @@ function drawRoute(result) {
   ctx.clearRect(0, 0, width, height);
 
   const sky = ctx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, "#f6faf4");
-  sky.addColorStop(1, "#d8e6d3");
+  sky.addColorStop(0, "#f8fbff");
+  sky.addColorStop(1, "#d7ebfa");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = "#b8d1af";
+  ctx.fillStyle = "#b7d2e8";
   ctx.beginPath();
   ctx.moveTo(0, height * 0.7);
   for (let x = 0; x <= width; x += 18) {
@@ -247,7 +247,7 @@ function drawRoute(result) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#e2553f";
+  ctx.strokeStyle = "#1f7ae0";
   ctx.lineWidth = 16;
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -266,15 +266,15 @@ function drawRoute(result) {
 
   const runnerX = width * clamp(result.percentile, 0.12, 0.92);
   const runnerY = height * 0.62 + Math.sin(runnerX / 46) * 28 + Math.cos(runnerX / 82) * 16;
-  ctx.fillStyle = "#18221d";
+  ctx.fillStyle = "#10233f";
   ctx.beginPath();
   ctx.arc(runnerX, runnerY - 20, 14, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillRect(runnerX - 5, runnerY - 8, 10, 28);
 
-  ctx.fillStyle = "#d9a441";
+  ctx.fillStyle = "#f2b84b";
   ctx.fillRect(width - 88, 72, 9, 115);
-  ctx.fillStyle = "#18221d";
+  ctx.fillStyle = "#10233f";
   ctx.fillRect(width - 79, 72, 42, 28);
 }
 
