@@ -146,20 +146,31 @@
           </section>
 
           <section id="general-panel" class="general-panel hidden">
-            <div class="admin-stat">
-              <span>Total de provas</span>
-              <strong id="admin-races">0</strong>
-            </div>
-            <div class="admin-stat">
-              <span>Corredores ativos</span>
-              <strong id="admin-runners">0</strong>
-            </div>
-            <div class="admin-stat">
-              <span>Média de pontos</span>
-              <strong id="admin-average">0</strong>
+            <div class="admin-dashboard-header">
+              <div>
+                <p class="eyebrow">Gestão da liga</p>
+                <h2>Painel geral</h2>
+              </div>
+              <span>Validações, atletas e mensagens num só lugar.</span>
             </div>
 
-            <form id="create-runner-form" class="admin-form">
+            <div class="admin-overview">
+              <div class="admin-stat">
+                <span>Total de provas</span>
+                <strong id="admin-races">0</strong>
+              </div>
+              <div class="admin-stat">
+                <span>Corredores ativos</span>
+                <strong id="admin-runners">0</strong>
+              </div>
+              <div class="admin-stat">
+                <span>Média de pontos</span>
+                <strong id="admin-average">0</strong>
+              </div>
+            </div>
+
+            <div class="admin-grid">
+            <form id="create-runner-form" class="admin-form admin-form-wide">
               <h2>Inscrever atleta</h2>
               <label>
                 Nome
@@ -211,7 +222,7 @@
               </button>
             </form>
 
-            <form id="password-form" class="admin-form">
+            <form id="password-form" class="admin-form admin-form-small">
               <h2>Alterar password de atleta</h2>
               <label>
                 Atleta
@@ -227,7 +238,7 @@
               </button>
             </form>
 
-            <form id="admin-password-form" class="admin-form">
+            <form id="admin-password-form" class="admin-form admin-form-small">
               <h2>Password do acesso geral</h2>
               <label>
                 Password atual
@@ -244,17 +255,17 @@
               <p id="admin-password-message" class="form-note" role="status"></p>
             </form>
 
-            <section class="admin-form">
+            <section class="admin-form admin-form-small">
               <h2>Recuperação de passwords</h2>
               <div id="password-reset-requests" class="reset-request-list"></div>
             </section>
 
-            <section class="admin-form">
+            <section class="admin-form admin-form-medium">
               <h2>Atletas registados</h2>
               <div id="runner-accounts" class="runner-account-list"></div>
             </section>
 
-            <section class="admin-form">
+            <section class="admin-form admin-form-medium">
               <h2>Mensagens</h2>
               <form id="admin-message-form" class="message-form">
                 <label>
@@ -278,7 +289,7 @@
               <div id="admin-message-list" class="message-list"></div>
             </section>
 
-            <section class="admin-form">
+            <section class="admin-form admin-form-medium admin-form-priority">
               <h2>Provas pendentes</h2>
               <label>
                 Pesquisar
@@ -287,7 +298,7 @@
               <div id="pending-validations" class="validation-list"></div>
             </section>
 
-            <form id="edit-submission-form" class="admin-form">
+            <form id="edit-submission-form" class="admin-form admin-form-wide">
               <h2>Editar prova</h2>
               <div class="form-grid">
                 <label>
@@ -354,6 +365,7 @@
                 <button id="delete-submission" class="danger-action" type="button">Apagar</button>
               </div>
             </form>
+            </div>
           </section>
 
           <form id="race-form" class="hidden">

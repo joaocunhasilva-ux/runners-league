@@ -4,6 +4,7 @@ const customDistanceWrap = document.querySelector("#custom-distance-wrap");
 const canvas = document.querySelector("#route-canvas");
 const ctx = canvas.getContext("2d");
 
+const workspace = document.querySelector(".workspace");
 const loginPanel = document.querySelector("#login-panel");
 const signupPanel = document.querySelector("#signup-panel");
 const sessionPanel = document.querySelector("#session-panel");
@@ -376,6 +377,9 @@ const staticText = {
   "Total de provas": "Total races",
   "Corredores ativos": "Active runners",
   "Média de pontos": "Average points",
+  "Gestão da liga": "League management",
+  "Painel geral": "General dashboard",
+  "Validações, atletas e mensagens num só lugar.": "Validations, athletes and messages in one place.",
   "Criar atleta": "Create athlete",
   "Inscrever atleta": "Register athlete",
   "Nome": "Name",
@@ -1392,6 +1396,7 @@ function renderPasswordResetRequests(requests = passwordResetRows) {
 
 function renderSession() {
   const loggedIn = Boolean(session);
+  workspace.classList.toggle("admin-mode", loggedIn && session.type === "general");
   loginPanel.classList.toggle("hidden", loggedIn || signupOpen);
   signupPanel.classList.toggle("hidden", loggedIn || !signupOpen);
   sessionPanel.classList.toggle("hidden", !loggedIn);
