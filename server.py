@@ -138,6 +138,14 @@ def init_db():
         ensure_column(connection, "submissions", "official_url", "TEXT NOT NULL DEFAULT ''")
         ensure_column(connection, "submissions", "validation_status", "TEXT NOT NULL DEFAULT 'pending'")
         ensure_column(connection, "submissions", "season_year", f"INTEGER NOT NULL DEFAULT {CURRENT_YEAR}")
+        ensure_column(connection, "runners", "photo_url", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "email", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "city", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "country", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "club", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "birth_year", "INTEGER")
+        ensure_column(connection, "runners", "bio", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "runners", "share_profile", "INTEGER NOT NULL DEFAULT 1")
         connection.execute(
             """
             UPDATE submissions
@@ -289,6 +297,45 @@ def fetch_profiles():
     return [row["name"] for row in rows]
 
 
+def runner_profile_payload(row, include_private=False):
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "photoUrl": row["photo_url"],
+        "email": row["email"] if include_private else "",
+        "city": row["city"],
+        "country": row["country"],
+        "club": row["club"],
+        "birthYear": row["birth_year"],
+        "bio": row["bio"],
+        "shareProfile": bool(row["share_profile"]),
+        "createdAt": row["created_at"],
+    }
+
+
+def fetch_runner_profiles(include_private=False):
+    with connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                name,
+                photo_url,
+                email,
+                city,
+                country,
+                club,
+                birth_year,
+                bio,
+                share_profile,
+                created_at
+            FROM runners
+            ORDER BY name
+            """
+        ).fetchall()
+    return [runner_profile_payload(row, include_private=include_private) for row in rows]
+
+
 def fetch_runner_accounts():
     with connect() as connection:
         rows = connection.execute(
@@ -296,15 +343,23 @@ def fetch_runner_accounts():
             SELECT
                 runners.id,
                 runners.name,
+                runners.photo_url AS photoUrl,
+                runners.email,
+                runners.city,
+                runners.country,
+                runners.club,
+                runners.birth_year AS birthYear,
+                runners.bio,
+                runners.share_profile AS shareProfile,
                 runners.created_at AS createdAt,
                 COUNT(submissions.id) AS submissions
             FROM runners
             LEFT JOIN submissions ON submissions.runner_id = runners.id
-            GROUP BY runners.id, runners.name, runners.created_at
+            GROUP BY runners.id, runners.name, runners.photo_url, runners.email, runners.city, runners.country, runners.club, runners.birth_year, runners.bio, runners.share_profile, runners.created_at
             ORDER BY runners.name
             """
         ).fetchall()
-    return [dict(row) for row in rows]
+    return [dict(row) | {"shareProfile": bool(row["shareProfile"])} for row in rows]
 
 
 def fetch_password_reset_requests(user):
@@ -465,13 +520,43 @@ def create_runner_account(payload, user):
         raise PermissionError("Só o acesso geral pode criar atletas")
     name = payload.get("name", "").strip()
     password = payload.get("password", "")
+    birth_year = payload.get("birthYear") or None
     if len(name) < 2:
         raise ValueError("Nome do atleta demasiado curto")
     if len(password) < 6:
         raise ValueError("A password deve ter pelo menos 6 caracteres")
+    if birth_year is not None:
+        birth_year = int(birth_year)
+        if birth_year < 1900 or birth_year > CURRENT_YEAR:
+            raise ValueError("Ano de nascimento inválido")
 
     with connect() as connection:
         runner_id = runner_id_for(connection, name)
+        connection.execute(
+            """
+            UPDATE runners
+            SET photo_url = ?,
+                email = ?,
+                city = ?,
+                country = ?,
+                club = ?,
+                birth_year = ?,
+                bio = ?,
+                share_profile = ?
+            WHERE id = ?
+            """,
+            (
+                payload.get("photoUrl", "").strip(),
+                payload.get("email", "").strip(),
+                payload.get("city", "").strip(),
+                payload.get("country", "").strip(),
+                payload.get("club", "").strip(),
+                birth_year,
+                payload.get("bio", "").strip(),
+                1 if payload.get("shareProfile", True) else 0,
+                runner_id,
+            ),
+        )
         connection.execute(
             """
             INSERT INTO users (runner_id, name, role, password_hash)
@@ -483,7 +568,61 @@ def create_runner_account(payload, user):
             """,
             (runner_id, name, hash_password(password)),
         )
-    return {"profiles": fetch_profiles(), "runners": fetch_runner_accounts()}
+    return {"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles(), "runners": fetch_runner_accounts()}
+
+
+def register_runner_account(payload):
+    name = payload.get("name", "").strip()
+    password = payload.get("password", "")
+    birth_year = payload.get("birthYear") or None
+    if len(name) < 2:
+        raise ValueError("Nome do atleta demasiado curto")
+    if len(password) < 6:
+        raise ValueError("A password deve ter pelo menos 6 caracteres")
+    if birth_year is not None:
+        birth_year = int(birth_year)
+        if birth_year < 1900 or birth_year > CURRENT_YEAR:
+            raise ValueError("Ano de nascimento inválido")
+
+    with connect() as connection:
+        existing = connection.execute("SELECT id FROM runners WHERE name = ?", (name,)).fetchone()
+        if existing is not None:
+            raise ValueError("Já existe um atleta com esse nome")
+        cursor = connection.execute("INSERT INTO runners (name) VALUES (?)", (name,))
+        runner_id = cursor.lastrowid
+        connection.execute(
+            """
+            UPDATE runners
+            SET photo_url = ?,
+                email = ?,
+                city = ?,
+                country = ?,
+                club = ?,
+                birth_year = ?,
+                bio = ?,
+                share_profile = ?
+            WHERE id = ?
+            """,
+            (
+                payload.get("photoUrl", "").strip(),
+                payload.get("email", "").strip(),
+                payload.get("city", "").strip(),
+                payload.get("country", "").strip(),
+                payload.get("club", "").strip(),
+                birth_year,
+                payload.get("bio", "").strip(),
+                1 if payload.get("shareProfile", True) else 0,
+                runner_id,
+            ),
+        )
+        connection.execute(
+            """
+            INSERT INTO users (runner_id, name, role, password_hash)
+            VALUES (?, ?, 'runner', ?)
+            """,
+            (runner_id, name, hash_password(password)),
+        )
+    return {"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles(), "message": "Inscrição criada. Já podes entrar como atleta."}
 
 
 def update_runner_password(payload, user):
@@ -663,7 +802,7 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/profiles":
-            self.send_json({"profiles": fetch_profiles()})
+            self.send_json({"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles()})
             return
         if self.path == "/api/runners":
             user = self.require_auth()
@@ -704,6 +843,12 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
         if self.path == "/api/password-reset/request":
             try:
                 self.send_json(request_password_reset(self.read_json()), status=201)
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            return
+        if self.path == "/api/register":
+            try:
+                self.send_json(register_runner_account(self.read_json()), status=201)
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
             return

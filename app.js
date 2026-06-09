@@ -5,12 +5,16 @@ const canvas = document.querySelector("#route-canvas");
 const ctx = canvas.getContext("2d");
 
 const loginPanel = document.querySelector("#login-panel");
+const signupPanel = document.querySelector("#signup-panel");
 const sessionPanel = document.querySelector("#session-panel");
 const generalPanel = document.querySelector("#general-panel");
 const panelTitle = document.querySelector("#panel-title");
 const loginButton = document.querySelector("#login-button");
 const passwordResetRequestButton = document.querySelector("#password-reset-request");
+const showSignupButton = document.querySelector("#show-signup");
+const cancelSignupButton = document.querySelector("#cancel-signup");
 const loginMessage = document.querySelector("#login-message");
+const signupMessage = document.querySelector("#signup-message");
 const logoutButton = document.querySelector("#logout");
 const profileSelect = document.querySelector("#profile");
 const passwordInput = document.querySelector("#password");
@@ -21,6 +25,7 @@ const navButtons = document.querySelectorAll("[data-view]");
 const appPages = document.querySelectorAll(".app-page");
 const langButtons = document.querySelectorAll("[data-lang]");
 const createRunnerForm = document.querySelector("#create-runner-form");
+const signupForm = document.querySelector("#signup-form");
 const passwordForm = document.querySelector("#password-form");
 const adminPasswordForm = document.querySelector("#admin-password-form");
 const newRunnerName = document.querySelector("#new-runner-name");
@@ -32,6 +37,26 @@ const newAdminPassword = document.querySelector("#new-admin-password");
 const adminPasswordMessage = document.querySelector("#admin-password-message");
 const passwordResetRequests = document.querySelector("#password-reset-requests");
 const runnerAccounts = document.querySelector("#runner-accounts");
+const newRunnerEmail = document.querySelector("#new-runner-email");
+const newRunnerPhoto = document.querySelector("#new-runner-photo");
+const newRunnerCity = document.querySelector("#new-runner-city");
+const newRunnerCountry = document.querySelector("#new-runner-country");
+const newRunnerClub = document.querySelector("#new-runner-club");
+const newRunnerBirthYear = document.querySelector("#new-runner-birth-year");
+const newRunnerBio = document.querySelector("#new-runner-bio");
+const newRunnerShareProfile = document.querySelector("#new-runner-share-profile");
+const signupFields = {
+  name: document.querySelector("#signup-name"),
+  email: document.querySelector("#signup-email"),
+  photoUrl: document.querySelector("#signup-photo"),
+  city: document.querySelector("#signup-city"),
+  country: document.querySelector("#signup-country"),
+  club: document.querySelector("#signup-club"),
+  birthYear: document.querySelector("#signup-birth-year"),
+  bio: document.querySelector("#signup-bio"),
+  shareProfile: document.querySelector("#signup-share-profile"),
+  password: document.querySelector("#signup-password"),
+};
 const pendingValidations = document.querySelector("#pending-validations");
 const seasonFilter = document.querySelector("#season-filter");
 const editSubmissionForm = document.querySelector("#edit-submission-form");
@@ -103,9 +128,11 @@ fields.seasonYear.value = currentYear;
 
 let submissions = [];
 let runnerProfiles = [];
+let runnerProfileRows = [];
 let runnerAccountRows = [];
 let passwordResetRows = [];
 let selectedAthlete = null;
+let signupOpen = false;
 let language = localStorage.getItem("runners-league-language") || "pt";
 let session = JSON.parse(localStorage.getItem("runners-league-session") || "null");
 if (session && !session.token) {
@@ -129,6 +156,11 @@ const text = {
     pending: "Pendente",
     rankingEmpty: "Sem ranking nesta época",
     athleteProfile: "Perfil do atleta",
+    privateProfile: "Perfil privado",
+    privateProfileNote: "Este atleta optou por não partilhar dados pessoais na página de entrada.",
+    shareProfile: "Perfil público",
+    hideProfile: "Perfil privado",
+    noBio: "Sem bio pública.",
     seasonTotal: "Total da época",
     countingRaces: "Provas a contar",
     approvedShort: "Aprovadas",
@@ -161,6 +193,7 @@ const text = {
     setPassword: "Definir password",
     noPendingRequests: "Sem pedidos pendentes",
     loginTitle: "Entrar na liga",
+    signupTitle: "Inscrição de atleta",
     publicRanking: "Ranking público",
     pointsRanking: "Ranking por pontos",
     generalAccess: "Acesso geral",
@@ -188,6 +221,11 @@ const text = {
     pending: "Pending",
     rankingEmpty: "No ranking for this season",
     athleteProfile: "Athlete profile",
+    privateProfile: "Private profile",
+    privateProfileNote: "This athlete chose not to share personal data on the entry page.",
+    shareProfile: "Public profile",
+    hideProfile: "Private profile",
+    noBio: "No public bio.",
     seasonTotal: "Season total",
     countingRaces: "Counting races",
     approvedShort: "Approved",
@@ -220,6 +258,7 @@ const text = {
     setPassword: "Set password",
     noPendingRequests: "No pending requests",
     loginTitle: "Enter the league",
+    signupTitle: "Athlete registration",
     publicRanking: "Public ranking",
     pointsRanking: "Points ranking",
     generalAccess: "General access",
@@ -244,11 +283,24 @@ const staticText = {
   "Password": "Password",
   "Entrar": "Enter",
   "Recuperar password": "Recover password",
+  "Inscrever atleta": "Register athlete",
+  "Inscrição de atleta": "Athlete registration",
+  "Criar inscrição": "Create registration",
+  "Voltar ao login": "Back to login",
   "Total de provas": "Total races",
   "Corredores ativos": "Active runners",
   "Média de pontos": "Average points",
   "Criar atleta": "Create athlete",
+  "Inscrever atleta": "Register athlete",
   "Nome": "Name",
+  "Email": "Email",
+  "URL da foto": "Photo URL",
+  "Cidade": "City",
+  "País": "Country",
+  "Clube": "Club",
+  "Ano de nascimento": "Birth year",
+  "Bio curta": "Short bio",
+  "Mostrar perfil na página de entrada": "Show profile on the entry page",
   "Password inicial": "Initial password",
   "Alterar password de atleta": "Change athlete password",
   "Atleta": "Athlete",
@@ -378,6 +430,10 @@ const serverText = {
   "Só o acesso geral pode criar atletas": "Only general access can create athletes",
   "Só o acesso geral pode alterar passwords": "Only general access can change passwords",
   "Atleta não encontrado": "Athlete not found",
+  "Nome do atleta demasiado curto": "Athlete name is too short",
+  "Ano de nascimento inválido": "Invalid birth year",
+  "Já existe um atleta com esse nome": "An athlete with that name already exists",
+  "Inscrição criada. Já podes entrar como atleta.": "Registration created. You can now log in as an athlete.",
   "Password do acesso geral atualizada.": "General access password updated.",
   "Pedido registado. O acesso geral pode agora definir uma nova password.": "Request registered. General access can now set a new password.",
   "Só o acesso geral pode resolver pedidos de recuperação": "Only general access can resolve recovery requests",
@@ -763,6 +819,28 @@ function seasonRacesForRunner(runner) {
     .sort((a, b) => b.total - a.total);
 }
 
+function runnerProfileFor(name) {
+  return runnerProfileRows.find((profile) => profile.name === name) || null;
+}
+
+function runnerInitials(name) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function renderRunnerAvatar(profile, name) {
+  const safeName = escapeHtml(name);
+  if (profile?.photoUrl) {
+    return `<img src="${escapeHtml(profile.photoUrl)}" alt="${safeName}" loading="lazy" />`;
+  }
+  return `<span>${escapeHtml(runnerInitials(name))}</span>`;
+}
+
 function renderTopThree(rows) {
   const podium = rows.slice(0, 3);
   topThree.innerHTML = podium.length
@@ -794,15 +872,31 @@ function renderAthleteProfile(runner) {
   const rejected = races.filter((race) => race.validationStatus === "rejected");
   const score = counting.reduce((sum, race) => sum + race.total, 0);
   const approved = races.filter((race) => race.validationStatus === "approved").length;
+  const profile = runnerProfileFor(runner);
+  const canShowProfile = Boolean(
+    profile?.shareProfile || session?.type === "general" || (session?.type === "runner" && session.name === runner)
+  );
+  const profileMeta = profile
+    ? [profile.city, profile.country, profile.club].filter(Boolean).join(" · ")
+    : "";
 
   athleteProfile.classList.remove("hidden");
   athleteProfile.innerHTML = `
-    <div class="section-title">
-      <div>
-        <p class="eyebrow">${t("athleteProfile")}</p>
-        <h2>${escapeHtml(runner)}</h2>
+    <div class="athlete-hero">
+      <div class="athlete-avatar">
+        ${canShowProfile ? renderRunnerAvatar(profile, runner) : `<span>${escapeHtml(runnerInitials(runner))}</span>`}
       </div>
-      <span>${selectedSeason}</span>
+      <div>
+        <p class="eyebrow">${canShowProfile ? t("athleteProfile") : t("privateProfile")}</p>
+        <h2>${escapeHtml(runner)}</h2>
+        <p>${canShowProfile ? escapeHtml(profileMeta || profile?.bio || t("noBio")) : t("privateProfileNote")}</p>
+        ${
+          canShowProfile && profile?.bio && profileMeta
+            ? `<p>${escapeHtml(profile.bio)}</p>`
+            : ""
+        }
+      </div>
+      <span class="profile-visibility">${profile?.shareProfile ? t("shareProfile") : t("hideProfile")} · ${selectedSeason}</span>
     </div>
     <div class="profile-stats">
       <div><span>${t("seasonTotal")}</span><strong>${Math.round(score)}</strong></div>
@@ -996,8 +1090,9 @@ function renderAdminStats() {
   output.adminAverage.textContent = average;
 }
 
-function renderProfiles(profiles) {
+function renderProfiles(profiles, profilesPayload = runnerProfileRows) {
   runnerProfiles = profiles;
+  runnerProfileRows = profilesPayload;
   profileSelect.replaceChildren(
     ...profiles.map((profile) => {
       const option = document.createElement("option");
@@ -1029,9 +1124,15 @@ function renderRunnerAccounts(runners = runnerAccountRows) {
     ? runners
         .map(
           (runner) => `
-            <article class="runner-account">
-              <strong>${escapeHtml(runner.name)}</strong>
-              <span>${runner.submissions} ${runner.submissions === 1 ? t("race") : t("races")}</span>
+            <article class="runner-account runner-account-card">
+              <div class="runner-account-photo">
+                ${renderRunnerAvatar(runner, runner.name)}
+              </div>
+              <div>
+                <strong>${escapeHtml(runner.name)}</strong>
+                <span>${[runner.city, runner.country, runner.club].filter(Boolean).map(escapeHtml).join(" · ") || t("noBio")}</span>
+                <span>${runner.submissions} ${runner.submissions === 1 ? t("race") : t("races")} · ${runner.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+              </div>
             </article>
           `
         )
@@ -1068,14 +1169,15 @@ function renderPasswordResetRequests(requests = passwordResetRows) {
 
 function renderSession() {
   const loggedIn = Boolean(session);
-  loginPanel.classList.toggle("hidden", loggedIn);
+  loginPanel.classList.toggle("hidden", loggedIn || signupOpen);
+  signupPanel.classList.toggle("hidden", loggedIn || !signupOpen);
   sessionPanel.classList.toggle("hidden", !loggedIn);
   form.classList.toggle("hidden", !loggedIn || session.type !== "runner");
   generalPanel.classList.toggle("hidden", !loggedIn || session.type !== "general");
   resetButton.classList.toggle("hidden", !loggedIn || session.type !== "general");
 
   if (!loggedIn) {
-    panelTitle.textContent = t("loginTitle");
+    panelTitle.textContent = signupOpen ? t("signupTitle") : t("loginTitle");
     viewEyebrow.textContent = t("publicRanking");
     viewTitle.textContent = t("pointsRanking");
     renderSubmissions();
@@ -1123,20 +1225,21 @@ async function apiRequest(path, options = {}) {
 }
 
 async function loadDatabaseState() {
-  const [{ profiles }, data] = await Promise.all([
+  const [{ profiles, runnerProfiles: profileRows = [] }, data] = await Promise.all([
     apiRequest("/api/profiles"),
     apiRequest("/api/submissions"),
   ]);
   submissions = data.submissions;
   renderSeasonFilter();
   renderEditSubmissionOptions();
-  renderProfiles(profiles);
+  renderProfiles(profiles, profileRows);
   renderSession();
 }
 
 async function loadRunnerAccounts() {
   if (session?.type !== "general") return;
   const data = await apiRequest("/api/runners");
+  runnerProfileRows = data.runners;
   renderRunnerAccounts(data.runners);
 }
 
@@ -1172,6 +1275,18 @@ navButtons.forEach((button) => {
 
 langButtons.forEach((button) => {
   button.addEventListener("click", () => setLanguage(button.dataset.lang));
+});
+
+showSignupButton.addEventListener("click", () => {
+  signupOpen = true;
+  loginMessage.textContent = "";
+  renderSession();
+});
+
+cancelSignupButton.addEventListener("click", () => {
+  signupOpen = false;
+  signupMessage.textContent = "";
+  renderSession();
 });
 
 seasonFilter.addEventListener("change", () => {
@@ -1210,6 +1325,37 @@ passwordResetRequestButton.addEventListener("click", async () => {
     body: JSON.stringify({ name: profileSelect.value }),
   });
   loginMessage.textContent = data.message;
+});
+
+signupForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  signupMessage.textContent = "";
+  try {
+    const data = await apiRequest("/api/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: signupFields.name.value,
+        email: signupFields.email.value,
+        photoUrl: signupFields.photoUrl.value,
+        city: signupFields.city.value,
+        country: signupFields.country.value,
+        club: signupFields.club.value,
+        birthYear: signupFields.birthYear.value,
+        bio: signupFields.bio.value,
+        shareProfile: signupFields.shareProfile.checked,
+        password: signupFields.password.value,
+      }),
+    });
+    renderProfiles(data.profiles, data.runnerProfiles);
+    profileSelect.value = signupFields.name.value.trim();
+    signupForm.reset();
+    signupFields.shareProfile.checked = true;
+    signupOpen = false;
+    loginMessage.textContent = data.message;
+    renderSession();
+  } catch (error) {
+    signupMessage.textContent = error.message;
+  }
 });
 
 loginButton.addEventListener("click", async () => {
@@ -1305,12 +1451,28 @@ createRunnerForm.addEventListener("submit", async (event) => {
     method: "POST",
     body: JSON.stringify({
       name: newRunnerName.value,
+      email: newRunnerEmail.value,
+      photoUrl: newRunnerPhoto.value,
+      city: newRunnerCity.value,
+      country: newRunnerCountry.value,
+      club: newRunnerClub.value,
+      birthYear: newRunnerBirthYear.value,
+      bio: newRunnerBio.value,
+      shareProfile: newRunnerShareProfile.checked,
       password: newRunnerPassword.value,
     }),
   });
-  renderProfiles(data.profiles);
+  renderProfiles(data.profiles, data.runnerProfiles);
   renderRunnerAccounts(data.runners);
   newRunnerName.value = "";
+  newRunnerEmail.value = "";
+  newRunnerPhoto.value = "";
+  newRunnerCity.value = "";
+  newRunnerCountry.value = "";
+  newRunnerClub.value = "";
+  newRunnerBirthYear.value = "";
+  newRunnerBio.value = "";
+  newRunnerShareProfile.checked = true;
   newRunnerPassword.value = "";
   renderAdminStats();
 });

@@ -70,7 +70,68 @@
             <button id="password-reset-request" class="secondary-action" type="button">
               Recuperar password
             </button>
+            <button id="show-signup" class="secondary-action" type="button">
+              Inscrever atleta
+            </button>
             <p id="login-message" class="form-note" role="status"></p>
+          </section>
+
+          <section id="signup-panel" class="signup-panel hidden">
+            <form id="signup-form">
+              <h2>Inscrição de atleta</h2>
+              <label>
+                Nome
+                <input id="signup-name" type="text" autocomplete="name" />
+              </label>
+              <label>
+                Email
+                <input id="signup-email" type="email" autocomplete="email" />
+              </label>
+              <label>
+                URL da foto
+                <input id="signup-photo" type="url" placeholder="https://..." />
+              </label>
+              <div class="form-grid">
+                <label>
+                  Cidade
+                  <input id="signup-city" type="text" autocomplete="address-level2" />
+                </label>
+                <label>
+                  País
+                  <input id="signup-country" type="text" autocomplete="country-name" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Clube
+                  <input id="signup-club" type="text" />
+                </label>
+                <label>
+                  Ano de nascimento
+                  <input id="signup-birth-year" type="number" min="1900" max="2026" />
+                </label>
+              </div>
+              <label>
+                Bio curta
+                <textarea id="signup-bio" rows="3" maxlength="240"></textarea>
+              </label>
+              <label class="toggle-line">
+                <input id="signup-share-profile" type="checkbox" checked />
+                Mostrar perfil na página de entrada
+              </label>
+              <label>
+                Password
+                <input id="signup-password" type="password" autocomplete="new-password" />
+              </label>
+              <button class="primary-action" type="submit">
+                <span aria-hidden="true">+</span>
+                Criar inscrição
+              </button>
+              <button id="cancel-signup" class="secondary-action" type="button">
+                Voltar ao login
+              </button>
+              <p id="signup-message" class="form-note" role="status"></p>
+            </form>
           </section>
 
           <section id="session-panel" class="session-panel hidden">
@@ -98,10 +159,46 @@
             </div>
 
             <form id="create-runner-form" class="admin-form">
-              <h2>Criar atleta</h2>
+              <h2>Inscrever atleta</h2>
               <label>
                 Nome
                 <input id="new-runner-name" type="text" autocomplete="name" />
+              </label>
+              <label>
+                Email
+                <input id="new-runner-email" type="email" autocomplete="email" />
+              </label>
+              <label>
+                URL da foto
+                <input id="new-runner-photo" type="url" placeholder="https://..." />
+              </label>
+              <div class="form-grid">
+                <label>
+                  Cidade
+                  <input id="new-runner-city" type="text" autocomplete="address-level2" />
+                </label>
+                <label>
+                  País
+                  <input id="new-runner-country" type="text" autocomplete="country-name" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Clube
+                  <input id="new-runner-club" type="text" />
+                </label>
+                <label>
+                  Ano de nascimento
+                  <input id="new-runner-birth-year" type="number" min="1900" max="2026" />
+                </label>
+              </div>
+              <label>
+                Bio curta
+                <textarea id="new-runner-bio" rows="3" maxlength="240"></textarea>
+              </label>
+              <label class="toggle-line">
+                <input id="new-runner-share-profile" type="checkbox" checked />
+                Mostrar perfil na página de entrada
               </label>
               <label>
                 Password inicial
@@ -109,7 +206,7 @@
               </label>
               <button class="primary-action compact-action" type="submit">
                 <span aria-hidden="true">+</span>
-                Criar atleta
+                Inscrever atleta
               </button>
             </form>
 
