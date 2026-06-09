@@ -194,6 +194,8 @@ const text = {
     noPendingRequests: "Sem pedidos pendentes",
     loginTitle: "Entrar na liga",
     signupTitle: "Inscrição de atleta",
+    signupServerNotReady:
+      "A página de inscrição já foi atualizada, mas o servidor ainda não foi recarregado. Faz Reload no PythonAnywhere e tenta novamente.",
     publicRanking: "Ranking público",
     pointsRanking: "Ranking por pontos",
     generalAccess: "Acesso geral",
@@ -259,6 +261,8 @@ const text = {
     noPendingRequests: "No pending requests",
     loginTitle: "Enter the league",
     signupTitle: "Athlete registration",
+    signupServerNotReady:
+      "The registration page has been updated, but the server has not been reloaded yet. Reload the PythonAnywhere web app and try again.",
     publicRanking: "Public ranking",
     pointsRanking: "Points ranking",
     generalAccess: "General access",
@@ -1218,7 +1222,12 @@ async function apiRequest(path, options = {}) {
     ...options,
     headers,
   });
-  const data = await response.json();
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = { error: response.status === 404 ? "Endpoint não encontrado" : t("databaseError") };
+  }
   if (data.message) data.message = localizeServerMessage(data.message);
   if (!response.ok) throw new Error(localizeServerMessage(data.error) || t("databaseError"));
   return data;
@@ -1354,7 +1363,7 @@ signupForm.addEventListener("submit", async (event) => {
     loginMessage.textContent = data.message;
     renderSession();
   } catch (error) {
-    signupMessage.textContent = error.message;
+    signupMessage.textContent = error.message === "Endpoint não encontrado" ? t("signupServerNotReady") : error.message;
   }
 });
 
