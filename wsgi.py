@@ -5,6 +5,7 @@ from pathlib import Path
 from server import (
     ROOT,
     clear_submissions,
+    create_message,
     create_runner_account,
     create_submission,
     delete_session,
@@ -15,6 +16,8 @@ from server import (
     fetch_runner_profiles,
     fetch_submissions,
     fetch_current_runner_profile,
+    fetch_message_recipients,
+    fetch_messages,
     init_db,
     login_user,
     register_runner_account,
@@ -94,6 +97,12 @@ def route_api(environ, start_response):
                 return error
             return json_response(start_response, {"requests": fetch_password_reset_requests(user)})
 
+        if method == "GET" and path == "/api/messages":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, {"messages": fetch_messages(user), "recipients": fetch_message_recipients(user)})
+
         if method == "POST" and path == "/api/login":
             return json_response(start_response, {"session": login_user(read_json(environ))})
 
@@ -144,6 +153,12 @@ def route_api(environ, start_response):
             if error:
                 return error
             return json_response(start_response, {"submissions": update_submission_validation(read_json(environ), user)})
+
+        if method == "POST" and path == "/api/messages":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, create_message(read_json(environ), user), "201 Created")
 
         if method == "POST" and path == "/api/submissions/update":
             user, error = require_auth(environ, start_response)

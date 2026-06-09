@@ -64,6 +64,18 @@ const profileManagementSummary = document.querySelector("#profile-management-sum
 const profileRaceList = document.querySelector("#profile-race-list");
 const profileRaceCount = document.querySelector("#profile-race-count");
 const profileMessage = document.querySelector("#profile-message");
+const messageForm = document.querySelector("#message-form");
+const messageRecipient = document.querySelector("#message-recipient");
+const messageSubject = document.querySelector("#message-subject");
+const messageBody = document.querySelector("#message-body");
+const messageStatus = document.querySelector("#message-status");
+const messageList = document.querySelector("#message-list");
+const adminMessageForm = document.querySelector("#admin-message-form");
+const adminMessageRecipient = document.querySelector("#admin-message-recipient");
+const adminMessageSubject = document.querySelector("#admin-message-subject");
+const adminMessageBody = document.querySelector("#admin-message-body");
+const adminMessageStatus = document.querySelector("#admin-message-status");
+const adminMessageList = document.querySelector("#admin-message-list");
 const profileFields = {
   name: document.querySelector("#profile-name"),
   email: document.querySelector("#profile-email"),
@@ -149,6 +161,8 @@ let runnerProfileRows = [];
 let currentRunnerProfile = null;
 let runnerAccountRows = [];
 let passwordResetRows = [];
+let messageRows = [];
+let messageRecipients = [];
 let selectedAthlete = null;
 let signupOpen = false;
 let language = localStorage.getItem("runners-league-language") || "pt";
@@ -226,6 +240,18 @@ const text = {
     saveData: "Guardar dados",
     submittedRacesTitle: "Provas submetidas",
     noProfileLoaded: "Perfil ainda não carregado.",
+    messagesTitle: "Mensagens",
+    inbox: "Caixa de entrada",
+    recipient: "Destinatário",
+    subject: "Assunto",
+    messageText: "Mensagem",
+    sendMessage: "Enviar mensagem",
+    noMessages: "Sem mensagens.",
+    sent: "Enviada",
+    received: "Recebida",
+    system: "Sistema",
+    shareRace: "Partilhar",
+    shareCopied: "Texto de partilha copiado.",
     generalPointsRanking: "Ranking geral por pontos",
     myRaces: "As minhas provas",
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
@@ -299,6 +325,18 @@ const text = {
     saveData: "Save data",
     submittedRacesTitle: "Submitted races",
     noProfileLoaded: "Profile not loaded yet.",
+    messagesTitle: "Messages",
+    inbox: "Inbox",
+    recipient: "Recipient",
+    subject: "Subject",
+    messageText: "Message",
+    sendMessage: "Send message",
+    noMessages: "No messages.",
+    sent: "Sent",
+    received: "Received",
+    system: "System",
+    shareRace: "Share",
+    shareCopied: "Share text copied.",
     generalPointsRanking: "Overall points ranking",
     myRaces: "My races",
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
@@ -325,6 +363,12 @@ const staticText = {
   "Editar perfil": "Edit profile",
   "Guardar dados": "Save data",
   "Provas submetidas": "Submitted races",
+  "Mensagens": "Messages",
+  "Caixa de entrada": "Inbox",
+  "Destinatário": "Recipient",
+  "Assunto": "Subject",
+  "Mensagem": "Message",
+  "Enviar mensagem": "Send message",
   "0 provas": "0 races",
   "Inscrição de atleta": "Athlete registration",
   "Criar inscrição": "Create registration",
@@ -479,6 +523,11 @@ const serverText = {
   "Inscrição criada. Já podes entrar como atleta.": "Registration created. You can now log in as an athlete.",
   "Dados do atleta atualizados.": "Athlete data updated.",
   "Só atletas podem gerir este perfil": "Only athletes can manage this profile",
+  "Escolhe um destinatário": "Choose a recipient",
+  "Indica um assunto": "Add a subject",
+  "Escreve uma mensagem": "Write a message",
+  "Destinatário não encontrado": "Recipient not found",
+  "Mensagem enviada.": "Message sent.",
   "Password do acesso geral atualizada.": "General access password updated.",
   "Pedido registado. O acesso geral pode agora definir uma nova password.": "Request registered. General access can now set a new password.",
   "Só o acesso geral pode resolver pedidos de recuperação": "Only general access can resolve recovery requests",
@@ -888,18 +937,37 @@ function renderRunnerAvatar(profile, name) {
 
 function renderTopThree(rows) {
   const podium = rows.slice(0, 3);
+  const topTen = rows.slice(3, 10);
   topThree.innerHTML = podium.length
-    ? podium
-        .map(
-          (row, index) => `
-            <button type="button" class="podium-item" data-athlete="${escapeHtml(row.runner)}">
-              <span>#${index + 1}</span>
-              <strong>${escapeHtml(row.runner)}</strong>
-              <em>${Math.round(row.score)} pts</em>
-            </button>
-          `
-        )
-        .join("")
+    ? `
+        <div class="podium-stage">
+          ${podium
+            .map((row, index) => {
+              const placeClass = index === 0 ? "gold" : index === 1 ? "silver" : "bronze";
+              return `
+                <button type="button" class="podium-card ${placeClass}" data-athlete="${escapeHtml(row.runner)}">
+                  <span>#${index + 1}</span>
+                  <strong>${escapeHtml(row.runner)}</strong>
+                  <em>${Math.round(row.score)} ${t("pts")}</em>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+        <div class="top-ten-list">
+          ${topTen
+            .map(
+              (row, index) => `
+                <button type="button" class="top-ten-row" data-athlete="${escapeHtml(row.runner)}">
+                  <span>#${index + 4}</span>
+                  <strong>${escapeHtml(row.runner)}</strong>
+                  <em>${Math.round(row.score)} ${t("pts")}</em>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      `
     : `<div class="podium-item empty-state"><strong>${t("rankingEmpty")}</strong></div>`;
 }
 
@@ -1077,18 +1145,66 @@ function renderProfileManagement() {
     ? races
         .map(
           (race) => `
-            <article class="submission-item">
+            <article class="submission-item" data-race-id="${race.id}">
               <div class="submission-title">
                 <strong>${escapeHtml(race.raceName)}</strong>
                 <span>${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km · ${formatPace(race.paceSeconds)} · ${race.safeRank}/${race.finishers} ${t("classified")}</span>
                 <span class="submission-meta">${validationLabel(race)} · ${Math.round(race.elevation)} m D+ · ${race.seasonYear}</span>
               </div>
-              <div class="submission-score">${race.total}</div>
+              <div class="submission-actions">
+                <div class="submission-score">${race.total}</div>
+                <button class="share-action" type="button" data-share-race="${race.id}">${t("shareRace")}</button>
+              </div>
             </article>
           `
         )
         .join("")
     : `<article class="submission-item empty-state"><strong>${t("noSubmittedRaces")}</strong></article>`;
+}
+
+function renderMessageRecipients() {
+  [messageRecipient, adminMessageRecipient].forEach((select) => {
+    if (!select) return;
+    select.replaceChildren(
+      ...messageRecipients.map((recipient) => {
+        const option = document.createElement("option");
+        option.value = recipient.name;
+        option.textContent = recipient.role === "general" ? `${recipient.name} (${t("general")})` : recipient.name;
+        return option;
+      })
+    );
+  });
+}
+
+function renderMessages() {
+  const targetList = session?.type === "general" ? adminMessageList : messageList;
+  if (!targetList) return;
+  targetList.innerHTML = messageRows.length
+    ? messageRows
+        .map(
+          (message) => `
+            <article class="message-item ${escapeHtml(message.kind)}">
+              <div>
+                <strong>${escapeHtml(message.subject)}</strong>
+                <span>${escapeHtml(message.direction === "sent" ? t("sent") : message.kind === "system" ? t("system") : t("received"))} · ${escapeHtml(message.sender)} → ${escapeHtml(message.recipient)} · ${escapeHtml(formatDateTime(message.createdAt))}</span>
+              </div>
+              <p>${escapeHtml(message.body)}</p>
+            </article>
+          `
+        )
+        .join("")
+    : `<article class="message-item empty-state"><strong>${t("noMessages")}</strong></article>`;
+}
+
+function leaguePositionForRunner(runner) {
+  const index = rankingRows().findIndex((row) => row.runner === runner);
+  return index >= 0 ? index + 1 : null;
+}
+
+function shareTextForRace(race) {
+  const position = leaguePositionForRunner(race.runner);
+  const place = position ? `#${position}` : "-";
+  return `Runners League: ${race.runner} somou ${race.total} pts em ${race.raceName} (${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km) e está em ${place} na liga. https://rljc.pythonanywhere.com`;
 }
 
 function renderSeasonFilter() {
@@ -1308,14 +1424,17 @@ function renderSession() {
   if (isGeneral) {
     loadRunnerAccounts();
     loadPasswordResetRequests();
+    loadMessages();
     renderPendingValidations();
     renderEditSubmissionOptions();
   } else {
     loadCurrentRunnerProfile();
+    loadMessages();
   }
   renderSubmissions();
   renderCurrent();
   renderProfileManagement();
+  renderMessages();
 }
 
 function saveSession() {
@@ -1378,6 +1497,15 @@ async function loadCurrentRunnerProfile() {
   renderProfileManagement();
 }
 
+async function loadMessages() {
+  if (!session) return;
+  const data = await apiRequest("/api/messages");
+  messageRows = data.messages;
+  messageRecipients = data.recipients;
+  renderMessageRecipients();
+  renderMessages();
+}
+
 async function refreshSubmissions() {
   const data = await apiRequest("/api/submissions");
   submissions = data.submissions;
@@ -1387,6 +1515,7 @@ async function refreshSubmissions() {
   renderAdminStats();
   renderCurrent();
   renderProfileManagement();
+  renderMessages();
 }
 
 function showView(view) {
@@ -1590,6 +1719,56 @@ profileForm.addEventListener("submit", async (event) => {
   }
 });
 
+async function submitMessage(formType) {
+  const isAdmin = formType === "admin";
+  const status = isAdmin ? adminMessageStatus : messageStatus;
+  const recipient = isAdmin ? adminMessageRecipient : messageRecipient;
+  const subject = isAdmin ? adminMessageSubject : messageSubject;
+  const body = isAdmin ? adminMessageBody : messageBody;
+  status.textContent = "";
+  try {
+    const data = await apiRequest("/api/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        recipient: recipient.value,
+        subject: subject.value,
+        body: body.value,
+      }),
+    });
+    messageRows = data.messages;
+    subject.value = "";
+    body.value = "";
+    status.textContent = data.message;
+    renderMessages();
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+messageForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  submitMessage("runner");
+});
+
+adminMessageForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  submitMessage("admin");
+});
+
+profileRaceList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-share-race]");
+  if (!button) return;
+  const race = visibleSubmissions().map(calculateRace).find((item) => String(item.id) === String(button.dataset.shareRace));
+  if (!race) return;
+  const textToShare = shareTextForRace(race);
+  if (navigator.share) {
+    await navigator.share({ title: "Runners League", text: textToShare }).catch(() => {});
+    return;
+  }
+  await navigator.clipboard?.writeText(textToShare);
+  profileMessage.textContent = t("shareCopied");
+});
+
 resetButton.addEventListener("click", async () => {
   const data = await apiRequest("/api/submissions", { method: "DELETE" });
   submissions = data.submissions;
@@ -1599,6 +1778,7 @@ resetButton.addEventListener("click", async () => {
   renderAdminStats();
   renderCurrent();
   renderPendingValidations();
+  loadMessages();
 });
 
 pendingValidations.addEventListener("click", async (event) => {

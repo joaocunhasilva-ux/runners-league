@@ -255,6 +255,30 @@
             </section>
 
             <section class="admin-form">
+              <h2>Mensagens</h2>
+              <form id="admin-message-form" class="message-form">
+                <label>
+                  Destinatário
+                  <select id="admin-message-recipient"></select>
+                </label>
+                <label>
+                  Assunto
+                  <input id="admin-message-subject" type="text" />
+                </label>
+                <label>
+                  Mensagem
+                  <textarea id="admin-message-body" rows="3"></textarea>
+                </label>
+                <button class="primary-action compact-action" type="submit">
+                  <span aria-hidden="true">→</span>
+                  Enviar mensagem
+                </button>
+                <p id="admin-message-status" class="form-note" role="status"></p>
+              </form>
+              <div id="admin-message-list" class="message-list"></div>
+            </section>
+
+            <section class="admin-form">
               <h2>Provas pendentes</h2>
               <label>
                 Pesquisar
@@ -583,6 +607,35 @@
               <span id="profile-race-count">0 provas</span>
             </div>
             <div id="profile-race-list" class="submission-list"></div>
+          </section>
+
+          <section class="messages-panel">
+            <div class="section-title">
+              <h2>Mensagens</h2>
+              <span>Caixa de entrada</span>
+            </div>
+            <form id="message-form" class="message-form">
+              <div class="form-grid">
+                <label>
+                  Destinatário
+                  <select id="message-recipient"></select>
+                </label>
+                <label>
+                  Assunto
+                  <input id="message-subject" type="text" />
+                </label>
+              </div>
+              <label>
+                Mensagem
+                <textarea id="message-body" rows="3"></textarea>
+              </label>
+              <button class="primary-action compact-action" type="submit">
+                <span aria-hidden="true">→</span>
+                Enviar mensagem
+              </button>
+              <p id="message-status" class="form-note" role="status"></p>
+            </form>
+            <div id="message-list" class="message-list"></div>
           </section>
         </section>
 

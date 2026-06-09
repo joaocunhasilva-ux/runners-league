@@ -135,6 +135,22 @@ def init_db():
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_user_id INTEGER,
+                recipient_user_id INTEGER NOT NULL,
+                subject TEXT NOT NULL,
+                body TEXT NOT NULL,
+                kind TEXT NOT NULL DEFAULT 'direct',
+                read_at TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_user_id) REFERENCES users(id),
+                FOREIGN KEY (recipient_user_id) REFERENCES users(id)
+            )
+            """
+        )
         ensure_column(connection, "submissions", "official_url", "TEXT NOT NULL DEFAULT ''")
         ensure_column(connection, "submissions", "validation_status", "TEXT NOT NULL DEFAULT 'pending'")
         ensure_column(connection, "submissions", "season_year", f"INTEGER NOT NULL DEFAULT {CURRENT_YEAR}")
@@ -236,7 +252,7 @@ def session_for_token(token):
     with connect() as connection:
         return connection.execute(
             """
-            SELECT users.id, users.name, users.role
+            SELECT users.id, users.runner_id, users.name, users.role
             FROM sessions
             JOIN users ON users.id = sessions.user_id
             WHERE sessions.token = ?
@@ -481,6 +497,124 @@ def fetch_password_reset_requests(user):
             """
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+def message_payload(row):
+    return {
+        "id": row["id"],
+        "sender": row["sender"] or "Sistema",
+        "recipient": row["recipient"],
+        "subject": row["subject"],
+        "body": row["body"],
+        "kind": row["kind"],
+        "readAt": row["read_at"],
+        "createdAt": row["created_at"],
+        "direction": row["direction"],
+    }
+
+
+def fetch_messages(user):
+    with connect() as connection:
+        if user["role"] == "general":
+            rows = connection.execute(
+                """
+                SELECT
+                    messages.id,
+                    sender.name AS sender,
+                    recipient.name AS recipient,
+                    messages.subject,
+                    messages.body,
+                    messages.kind,
+                    messages.read_at,
+                    messages.created_at,
+                    CASE
+                        WHEN messages.sender_user_id = ? THEN 'sent'
+                        WHEN messages.recipient_user_id = ? THEN 'received'
+                        ELSE 'system'
+                    END AS direction
+                FROM messages
+                LEFT JOIN users AS sender ON sender.id = messages.sender_user_id
+                JOIN users AS recipient ON recipient.id = messages.recipient_user_id
+                ORDER BY messages.created_at DESC, messages.id DESC
+                LIMIT 100
+                """,
+                (user["id"], user["id"]),
+            ).fetchall()
+        else:
+            rows = connection.execute(
+                """
+                SELECT
+                    messages.id,
+                    sender.name AS sender,
+                    recipient.name AS recipient,
+                    messages.subject,
+                    messages.body,
+                    messages.kind,
+                    messages.read_at,
+                    messages.created_at,
+                    CASE
+                        WHEN messages.sender_user_id = ? THEN 'sent'
+                        ELSE 'received'
+                    END AS direction
+                FROM messages
+                LEFT JOIN users AS sender ON sender.id = messages.sender_user_id
+                JOIN users AS recipient ON recipient.id = messages.recipient_user_id
+                WHERE messages.sender_user_id = ? OR messages.recipient_user_id = ?
+                ORDER BY messages.created_at DESC, messages.id DESC
+                LIMIT 100
+                """,
+                (user["id"], user["id"], user["id"]),
+            ).fetchall()
+    return [message_payload(row) for row in rows]
+
+
+def fetch_message_recipients(user):
+    with connect() as connection:
+        rows = connection.execute(
+            """
+            SELECT name, role
+            FROM users
+            WHERE id != ?
+            ORDER BY CASE role WHEN 'general' THEN 0 ELSE 1 END, name
+            """,
+            (user["id"],),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def create_message(payload, user):
+    recipient_name = payload.get("recipient", "").strip()
+    subject = payload.get("subject", "").strip()
+    body = payload.get("body", "").strip()
+    if len(recipient_name) < 2:
+        raise ValueError("Escolhe um destinatário")
+    if len(subject) < 2:
+        raise ValueError("Indica um assunto")
+    if len(body) < 2:
+        raise ValueError("Escreve uma mensagem")
+
+    with connect() as connection:
+        recipient = connection.execute("SELECT id FROM users WHERE name = ?", (recipient_name,)).fetchone()
+        if recipient is None:
+            raise ValueError("Destinatário não encontrado")
+        connection.execute(
+            """
+            INSERT INTO messages (sender_user_id, recipient_user_id, subject, body, kind)
+            VALUES (?, ?, ?, ?, 'direct')
+            """,
+            (user["id"], recipient["id"], subject, body),
+        )
+    return {"messages": fetch_messages(user), "message": "Mensagem enviada."}
+
+
+def create_system_message(connection, recipient_user_id, subject, body, sender_user_id=None):
+    connection.execute(
+        """
+        INSERT INTO messages (sender_user_id, recipient_user_id, subject, body, kind)
+        VALUES (?, ?, ?, ?, 'system')
+        """,
+        (sender_user_id, recipient_user_id, subject, body),
+    )
 
 
 def fetch_submissions():
@@ -853,13 +987,29 @@ def update_submission_validation(payload, user):
         raise ValueError("Estado de validação inválido")
 
     with connect() as connection:
-        existing = connection.execute("SELECT id FROM submissions WHERE id = ?", (submission_id,)).fetchone()
+        existing = connection.execute(
+            """
+            SELECT submissions.id, submissions.runner_id, submissions.race_name, users.id AS user_id
+            FROM submissions
+            JOIN users ON users.runner_id = submissions.runner_id AND users.role = 'runner'
+            WHERE submissions.id = ?
+            """,
+            (submission_id,),
+        ).fetchone()
         if existing is None:
             raise ValueError("Submissão não encontrada")
         connection.execute(
             "UPDATE submissions SET validation_status = ?, verified = ? WHERE id = ?",
             (status, 1 if status == "approved" else 0, submission_id),
         )
+        if status in ("approved", "rejected"):
+            subject = "Prova validada" if status == "approved" else "Prova rejeitada"
+            body = (
+                f'A tua prova "{existing["race_name"]}" foi aprovada e já conta para a liga.'
+                if status == "approved"
+                else f'A tua prova "{existing["race_name"]}" foi rejeitada. Contacta a gestão da liga se precisares de esclarecer.'
+            )
+            create_system_message(connection, existing["user_id"], subject, body, user["id"])
     return fetch_submissions()
 
 
@@ -932,6 +1082,12 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
             return
         if self.path == "/api/submissions":
             self.send_json({"submissions": fetch_submissions()})
+            return
+        if self.path == "/api/messages":
+            user = self.require_auth()
+            if user is None:
+                return
+            self.send_json({"messages": fetch_messages(user), "recipients": fetch_message_recipients(user)})
             return
         super().do_GET()
 
@@ -1024,6 +1180,15 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
                 self.send_json({"error": str(error)}, status=400)
             except PermissionError as error:
                 self.send_json({"error": str(error)}, status=403)
+            return
+        if self.path == "/api/messages":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(create_message(self.read_json(), user), status=201)
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
             return
         if self.path == "/api/submissions/update":
             user = self.require_auth()
