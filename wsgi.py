@@ -12,9 +12,11 @@ from server import (
     fetch_password_reset_requests,
     fetch_profiles,
     fetch_runner_accounts,
+    fetch_runner_profiles,
     fetch_submissions,
     init_db,
     login_user,
+    register_runner_account,
     request_password_reset,
     resolve_password_reset,
     session_for_token,
@@ -65,7 +67,7 @@ def route_api(environ, start_response):
 
     try:
         if method == "GET" and path == "/api/profiles":
-            return json_response(start_response, {"profiles": fetch_profiles()})
+            return json_response(start_response, {"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles()})
 
         if method == "GET" and path == "/api/submissions":
             return json_response(start_response, {"submissions": fetch_submissions()})
@@ -95,6 +97,9 @@ def route_api(environ, start_response):
 
         if method == "POST" and path == "/api/password-reset/request":
             return json_response(start_response, request_password_reset(read_json(environ)), "201 Created")
+
+        if method == "POST" and path == "/api/register":
+            return json_response(start_response, register_runner_account(read_json(environ)), "201 Created")
 
         if method == "POST" and path == "/api/password-reset/resolve":
             user, error = require_auth(environ, start_response)
