@@ -14,12 +14,14 @@ from server import (
     fetch_runner_accounts,
     fetch_runner_profiles,
     fetch_submissions,
+    fetch_current_runner_profile,
     init_db,
     login_user,
     register_runner_account,
     request_password_reset,
     resolve_password_reset,
     session_for_token,
+    update_current_runner_profile,
     update_runner_password,
     update_session_password,
     update_submission,
@@ -80,6 +82,12 @@ def route_api(environ, start_response):
                 return json_response(start_response, {"error": "Só o acesso geral pode ver atletas"}, "403 Forbidden")
             return json_response(start_response, {"runners": fetch_runner_accounts()})
 
+        if method == "GET" and path == "/api/me":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, {"profile": fetch_current_runner_profile(user)})
+
         if method == "GET" and path == "/api/password-reset/requests":
             user, error = require_auth(environ, start_response)
             if error:
@@ -100,6 +108,12 @@ def route_api(environ, start_response):
 
         if method == "POST" and path == "/api/register":
             return json_response(start_response, register_runner_account(read_json(environ)), "201 Created")
+
+        if method == "POST" and path == "/api/me":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, update_current_runner_profile(read_json(environ), user))
 
         if method == "POST" and path == "/api/password-reset/resolve":
             user, error = require_auth(environ, start_response)

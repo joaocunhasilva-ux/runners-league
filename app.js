@@ -24,6 +24,7 @@ const resetButton = document.querySelector("#reset");
 const navButtons = document.querySelectorAll("[data-view]");
 const appPages = document.querySelectorAll(".app-page");
 const langButtons = document.querySelectorAll("[data-lang]");
+const profileNavButton = document.querySelector("#profile-nav");
 const createRunnerForm = document.querySelector("#create-runner-form");
 const signupForm = document.querySelector("#signup-form");
 const passwordForm = document.querySelector("#password-form");
@@ -58,6 +59,22 @@ const signupFields = {
   password: document.querySelector("#signup-password"),
 };
 const pendingValidations = document.querySelector("#pending-validations");
+const profileForm = document.querySelector("#profile-form");
+const profileManagementSummary = document.querySelector("#profile-management-summary");
+const profileRaceList = document.querySelector("#profile-race-list");
+const profileRaceCount = document.querySelector("#profile-race-count");
+const profileMessage = document.querySelector("#profile-message");
+const profileFields = {
+  name: document.querySelector("#profile-name"),
+  email: document.querySelector("#profile-email"),
+  photoUrl: document.querySelector("#profile-photo"),
+  city: document.querySelector("#profile-city"),
+  country: document.querySelector("#profile-country"),
+  club: document.querySelector("#profile-club"),
+  birthYear: document.querySelector("#profile-birth-year"),
+  bio: document.querySelector("#profile-bio"),
+  shareProfile: document.querySelector("#profile-share-profile"),
+};
 const seasonFilter = document.querySelector("#season-filter");
 const editSubmissionForm = document.querySelector("#edit-submission-form");
 const editSubmissionSelect = document.querySelector("#edit-submission-select");
@@ -129,6 +146,7 @@ fields.seasonYear.value = currentYear;
 let submissions = [];
 let runnerProfiles = [];
 let runnerProfileRows = [];
+let currentRunnerProfile = null;
 let runnerAccountRows = [];
 let passwordResetRows = [];
 let selectedAthlete = null;
@@ -202,6 +220,12 @@ const text = {
     raceSubmission: "Submissão de prova",
     leagueManagement: "Gestão da liga",
     personalArea: "Área individual",
+    athleteManagement: "Gestão de atleta",
+    personalData: "Dados pessoais",
+    editProfile: "Editar perfil",
+    saveData: "Guardar dados",
+    submittedRacesTitle: "Provas submetidas",
+    noProfileLoaded: "Perfil ainda não carregado.",
     generalPointsRanking: "Ranking geral por pontos",
     myRaces: "As minhas provas",
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
@@ -269,6 +293,12 @@ const text = {
     raceSubmission: "Race submission",
     leagueManagement: "League management",
     personalArea: "Individual area",
+    athleteManagement: "Athlete management",
+    personalData: "Personal data",
+    editProfile: "Edit profile",
+    saveData: "Save data",
+    submittedRacesTitle: "Submitted races",
+    noProfileLoaded: "Profile not loaded yet.",
     generalPointsRanking: "Overall points ranking",
     myRaces: "My races",
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
@@ -280,6 +310,7 @@ const text = {
 const staticText = {
   "Liga": "League",
   "Conceito e regras": "Concept and rules",
+  "Meu perfil": "My profile",
   "Acesso": "Access",
   "Corredor": "Runner",
   "Geral": "General",
@@ -288,6 +319,13 @@ const staticText = {
   "Entrar": "Enter",
   "Recuperar password": "Recover password",
   "Inscrever atleta": "Register athlete",
+  "Área individual": "Individual area",
+  "Gestão de atleta": "Athlete management",
+  "Dados pessoais": "Personal data",
+  "Editar perfil": "Edit profile",
+  "Guardar dados": "Save data",
+  "Provas submetidas": "Submitted races",
+  "0 provas": "0 races",
   "Inscrição de atleta": "Athlete registration",
   "Criar inscrição": "Create registration",
   "Voltar ao login": "Back to login",
@@ -417,6 +455,7 @@ const staticAttributes = {
   "Visualização da prova": "Race visualisation",
   "Conceito e regras": "Concept and rules",
   "Apoiar a Runners League": "Support Runners League",
+  "Gestão de atleta": "Athlete management",
   "Componentes da pontuação": "Scoring components",
 };
 
@@ -438,6 +477,8 @@ const serverText = {
   "Ano de nascimento inválido": "Invalid birth year",
   "Já existe um atleta com esse nome": "An athlete with that name already exists",
   "Inscrição criada. Já podes entrar como atleta.": "Registration created. You can now log in as an athlete.",
+  "Dados do atleta atualizados.": "Athlete data updated.",
+  "Só atletas podem gerir este perfil": "Only athletes can manage this profile",
   "Password do acesso geral atualizada.": "General access password updated.",
   "Pedido registado. O acesso geral pode agora definir uma nova password.": "Request registered. General access can now set a new password.",
   "Só o acesso geral pode resolver pedidos de recuperação": "Only general access can resolve recovery requests",
@@ -988,6 +1029,68 @@ function renderRaceHistory() {
     : `<article class="submission-item empty-state"><strong>${t("noSubmittedRaces")}</strong></article>`;
 }
 
+function renderProfileManagement() {
+  if (!profileManagementSummary || session?.type !== "runner") return;
+  const profile = currentRunnerProfile || runnerProfileFor(session.name);
+  const runnerName = profile?.name || session.name;
+  const races = visibleSubmissions().map(calculateRace).sort((a, b) => b.id - a.id);
+  const approved = races.filter((race) => race.validationStatus === "approved").length;
+  const profileMeta = profile
+    ? [profile.city, profile.country, profile.club].filter(Boolean).join(" · ")
+    : "";
+
+  profileManagementSummary.innerHTML = profile
+    ? `
+      <div class="athlete-hero">
+        <div class="athlete-avatar">${renderRunnerAvatar(profile, runnerName)}</div>
+        <div>
+          <p class="eyebrow">${t("personalArea")}</p>
+          <h2>${escapeHtml(runnerName)}</h2>
+          <p>${escapeHtml(profileMeta || profile.bio || t("noBio"))}</p>
+          ${profile.bio && profileMeta ? `<p>${escapeHtml(profile.bio)}</p>` : ""}
+        </div>
+        <span class="profile-visibility">${profile.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+      </div>
+      <div class="profile-stats">
+        <div><span>${t("submittedRacesTitle")}</span><strong>${races.length}</strong></div>
+        <div><span>${t("approvedShort")}</span><strong>${approved}</strong></div>
+        <div><span>${t("eligibility")}</span><strong>${approved >= 3 ? t("eligible") : t("pendingShort")}</strong></div>
+        <div><span>${t("seasonRanking")}</span><strong>${selectedSeason}</strong></div>
+      </div>
+    `
+    : `<article class="submission-item empty-state"><strong>${t("noProfileLoaded")}</strong></article>`;
+
+  if (profile) {
+    profileFields.name.value = profile.name || "";
+    profileFields.email.value = profile.email || "";
+    profileFields.photoUrl.value = profile.photoUrl || "";
+    profileFields.city.value = profile.city || "";
+    profileFields.country.value = profile.country || "";
+    profileFields.club.value = profile.club || "";
+    profileFields.birthYear.value = profile.birthYear || "";
+    profileFields.bio.value = profile.bio || "";
+    profileFields.shareProfile.checked = Boolean(profile.shareProfile);
+  }
+
+  profileRaceCount.textContent = `${races.length} ${races.length === 1 ? t("race") : t("races")}`;
+  profileRaceList.innerHTML = races.length
+    ? races
+        .map(
+          (race) => `
+            <article class="submission-item">
+              <div class="submission-title">
+                <strong>${escapeHtml(race.raceName)}</strong>
+                <span>${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km · ${formatPace(race.paceSeconds)} · ${race.safeRank}/${race.finishers} ${t("classified")}</span>
+                <span class="submission-meta">${validationLabel(race)} · ${Math.round(race.elevation)} m D+ · ${race.seasonYear}</span>
+              </div>
+              <div class="submission-score">${race.total}</div>
+            </article>
+          `
+        )
+        .join("")
+    : `<article class="submission-item empty-state"><strong>${t("noSubmittedRaces")}</strong></article>`;
+}
+
 function renderSeasonFilter() {
   const seasons = Array.from(
     new Set([currentYear, ...submissions.map((race) => Number(race.seasonYear) || currentYear)])
@@ -1179,6 +1282,10 @@ function renderSession() {
   form.classList.toggle("hidden", !loggedIn || session.type !== "runner");
   generalPanel.classList.toggle("hidden", !loggedIn || session.type !== "general");
   resetButton.classList.toggle("hidden", !loggedIn || session.type !== "general");
+  profileNavButton.classList.toggle("hidden", !loggedIn || session.type !== "runner");
+  if ((!loggedIn || session.type !== "runner") && document.querySelector(".app-page.active")?.id === "profile-page") {
+    showView("league");
+  }
 
   if (!loggedIn) {
     panelTitle.textContent = signupOpen ? t("signupTitle") : t("loginTitle");
@@ -1203,9 +1310,12 @@ function renderSession() {
     loadPasswordResetRequests();
     renderPendingValidations();
     renderEditSubmissionOptions();
+  } else {
+    loadCurrentRunnerProfile();
   }
   renderSubmissions();
   renderCurrent();
+  renderProfileManagement();
 }
 
 function saveSession() {
@@ -1258,6 +1368,16 @@ async function loadPasswordResetRequests() {
   renderPasswordResetRequests(data.requests);
 }
 
+async function loadCurrentRunnerProfile() {
+  if (session?.type !== "runner") return;
+  const data = await apiRequest("/api/me");
+  currentRunnerProfile = data.profile;
+  const index = runnerProfileRows.findIndex((profile) => profile.name === currentRunnerProfile.name);
+  if (index >= 0) runnerProfileRows[index] = currentRunnerProfile;
+  else runnerProfileRows.push(currentRunnerProfile);
+  renderProfileManagement();
+}
+
 async function refreshSubmissions() {
   const data = await apiRequest("/api/submissions");
   submissions = data.submissions;
@@ -1266,6 +1386,7 @@ async function refreshSubmissions() {
   renderSubmissions();
   renderAdminStats();
   renderCurrent();
+  renderProfileManagement();
 }
 
 function showView(view) {
@@ -1279,7 +1400,10 @@ function showView(view) {
 }
 
 navButtons.forEach((button) => {
-  button.addEventListener("click", () => showView(button.dataset.view));
+  button.addEventListener("click", () => {
+    showView(button.dataset.view);
+    if (button.dataset.view === "profile") loadCurrentRunnerProfile();
+  });
 });
 
 langButtons.forEach((button) => {
@@ -1422,6 +1546,48 @@ form.addEventListener("submit", async (event) => {
   renderAdminStats();
   renderCurrent();
   renderPendingValidations();
+  renderProfileManagement();
+});
+
+profileForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  profileMessage.textContent = "";
+  try {
+    const previousName = session.name;
+    const data = await apiRequest("/api/me", {
+      method: "POST",
+      body: JSON.stringify({
+        name: profileFields.name.value,
+        email: profileFields.email.value,
+        photoUrl: profileFields.photoUrl.value,
+        city: profileFields.city.value,
+        country: profileFields.country.value,
+        club: profileFields.club.value,
+        birthYear: profileFields.birthYear.value,
+        bio: profileFields.bio.value,
+        shareProfile: profileFields.shareProfile.checked,
+      }),
+    });
+    currentRunnerProfile = data.profile;
+    if (session?.type === "runner") {
+      session.name = data.profile.name;
+      saveSession();
+      fields.runner.value = data.profile.name;
+    }
+    submissions = data.submissions;
+    if (previousName !== data.profile.name) {
+      selectedAthlete = data.profile.name;
+    }
+    renderProfiles(data.profiles, data.runnerProfiles);
+    renderSeasonFilter();
+    renderSubmissions();
+    renderCurrent();
+    renderProfileManagement();
+    renderSession();
+    profileMessage.textContent = data.message;
+  } catch (error) {
+    profileMessage.textContent = error.message;
+  }
 });
 
 resetButton.addEventListener("click", async () => {

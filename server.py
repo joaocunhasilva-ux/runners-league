@@ -336,6 +336,103 @@ def fetch_runner_profiles(include_private=False):
     return [runner_profile_payload(row, include_private=include_private) for row in rows]
 
 
+def fetch_current_runner_profile(user):
+    if user["role"] != "runner":
+        raise PermissionError("Só atletas podem gerir este perfil")
+    with connect() as connection:
+        row = connection.execute(
+            """
+            SELECT
+                runners.id,
+                runners.name,
+                runners.photo_url,
+                runners.email,
+                runners.city,
+                runners.country,
+                runners.club,
+                runners.birth_year,
+                runners.bio,
+                runners.share_profile,
+                runners.created_at
+            FROM runners
+            JOIN users ON users.runner_id = runners.id
+            WHERE users.id = ?
+            """,
+            (user["id"],),
+        ).fetchone()
+    if row is None:
+        raise ValueError("Atleta não encontrado")
+    return runner_profile_payload(row, include_private=True)
+
+
+def update_current_runner_profile(payload, user):
+    if user["role"] != "runner":
+        raise PermissionError("Só atletas podem gerir este perfil")
+    name = payload.get("name", "").strip()
+    birth_year = payload.get("birthYear") or None
+    if len(name) < 2:
+        raise ValueError("Nome do atleta demasiado curto")
+    if birth_year is not None:
+        birth_year = int(birth_year)
+        if birth_year < 1900 or birth_year > CURRENT_YEAR:
+            raise ValueError("Ano de nascimento inválido")
+
+    with connect() as connection:
+        current = connection.execute(
+            """
+            SELECT runners.id, runners.name
+            FROM runners
+            JOIN users ON users.runner_id = runners.id
+            WHERE users.id = ?
+            """,
+            (user["id"],),
+        ).fetchone()
+        if current is None:
+            raise ValueError("Atleta não encontrado")
+        duplicate = connection.execute(
+            "SELECT id FROM runners WHERE name = ? AND id != ?",
+            (name, current["id"]),
+        ).fetchone()
+        if duplicate is not None:
+            raise ValueError("Já existe um atleta com esse nome")
+        connection.execute(
+            """
+            UPDATE runners
+            SET name = ?,
+                photo_url = ?,
+                email = ?,
+                city = ?,
+                country = ?,
+                club = ?,
+                birth_year = ?,
+                bio = ?,
+                share_profile = ?
+            WHERE id = ?
+            """,
+            (
+                name,
+                payload.get("photoUrl", "").strip(),
+                payload.get("email", "").strip(),
+                payload.get("city", "").strip(),
+                payload.get("country", "").strip(),
+                payload.get("club", "").strip(),
+                birth_year,
+                payload.get("bio", "").strip(),
+                1 if payload.get("shareProfile", True) else 0,
+                current["id"],
+            ),
+        )
+        connection.execute("UPDATE users SET name = ? WHERE id = ?", (name, user["id"]))
+    updated_user = dict(user) | {"name": name}
+    return {
+        "profile": fetch_current_runner_profile(updated_user),
+        "profiles": fetch_profiles(),
+        "runnerProfiles": fetch_runner_profiles(),
+        "submissions": fetch_submissions(),
+        "message": "Dados do atleta atualizados.",
+    }
+
+
 def fetch_runner_accounts():
     with connect() as connection:
         rows = connection.execute(
@@ -813,6 +910,17 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
                 return
             self.send_json({"runners": fetch_runner_accounts()})
             return
+        if self.path == "/api/me":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json({"profile": fetch_current_runner_profile(user)})
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
+            return
         if self.path == "/api/password-reset/requests":
             user = self.require_auth()
             if user is None:
@@ -851,6 +959,17 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
                 self.send_json(register_runner_account(self.read_json()), status=201)
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
+            return
+        if self.path == "/api/me":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(update_current_runner_profile(self.read_json(), user))
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
             return
         if self.path == "/api/password-reset/resolve":
             user = self.require_auth()

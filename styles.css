@@ -167,7 +167,7 @@ form {
 
 .side-nav {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 6px;
   margin-bottom: 20px;
   padding: 4px;
@@ -266,6 +266,7 @@ textarea:focus {
 }
 
 .login-panel,
+.signup-panel,
 .session-panel,
 .general-panel {
   display: grid;
@@ -432,6 +433,19 @@ fieldset {
 
 .admin-form h2 {
   font-size: 1rem;
+}
+
+.profile-management-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.profile-page {
+  align-content: start;
 }
 
 .compact-action {

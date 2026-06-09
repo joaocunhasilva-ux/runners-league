@@ -30,6 +30,7 @@
 
           <nav class="side-nav" aria-label="Navegação principal">
             <button class="nav-button active" type="button" data-view="league">Liga</button>
+            <button id="profile-nav" class="nav-button hidden" type="button" data-view="profile">Meu perfil</button>
             <button class="nav-button" type="button" data-view="rules">Conceito e regras</button>
           </nav>
 
@@ -510,6 +511,79 @@
           </section>
 
           <section id="athlete-profile" class="athlete-profile hidden"></section>
+        </section>
+
+        <section id="profile-page" class="league-view profile-page app-page" aria-label="Gestão de atleta">
+          <div class="top-bar">
+            <div>
+              <p class="eyebrow">Área individual</p>
+              <h2>Gestão de atleta</h2>
+            </div>
+          </div>
+
+          <section id="profile-management-summary" class="athlete-profile"></section>
+
+          <form id="profile-form" class="profile-management-form">
+            <div class="section-title">
+              <h2>Dados pessoais</h2>
+              <span>Editar perfil</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                Nome
+                <input id="profile-name" type="text" autocomplete="name" />
+              </label>
+              <label>
+                Email
+                <input id="profile-email" type="email" autocomplete="email" />
+              </label>
+            </div>
+            <label>
+              URL da foto
+              <input id="profile-photo" type="url" placeholder="https://..." />
+            </label>
+            <div class="form-grid">
+              <label>
+                Cidade
+                <input id="profile-city" type="text" autocomplete="address-level2" />
+              </label>
+              <label>
+                País
+                <input id="profile-country" type="text" autocomplete="country-name" />
+              </label>
+            </div>
+            <div class="form-grid">
+              <label>
+                Clube
+                <input id="profile-club" type="text" />
+              </label>
+              <label>
+                Ano de nascimento
+                <input id="profile-birth-year" type="number" min="1900" max="2026" />
+              </label>
+            </div>
+            <label>
+              Bio curta
+              <textarea id="profile-bio" rows="3" maxlength="240"></textarea>
+            </label>
+            <label class="toggle-line">
+              <input id="profile-share-profile" type="checkbox" />
+              Mostrar perfil na página de entrada
+            </label>
+            <button class="primary-action compact-action" type="submit">
+              <span aria-hidden="true">✓</span>
+              Guardar dados
+            </button>
+            <p id="profile-message" class="form-note" role="status"></p>
+          </form>
+
+          <section class="submissions">
+            <div class="section-title">
+              <h2>Provas submetidas</h2>
+              <span id="profile-race-count">0 provas</span>
+            </div>
+            <div id="profile-race-list" class="submission-list"></div>
+          </section>
         </section>
 
         <section id="rules-page" class="league-view rules-page app-page" aria-label="Conceito e regras">
