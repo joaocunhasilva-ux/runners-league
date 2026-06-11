@@ -41,6 +41,8 @@ const passwordResetRequests = document.querySelector("#password-reset-requests")
 const runnerAccounts = document.querySelector("#runner-accounts");
 const newRunnerEmail = document.querySelector("#new-runner-email");
 const newRunnerPhoto = document.querySelector("#new-runner-photo");
+const newRunnerPhotoFile = document.querySelector("#new-runner-photo-file");
+const newRunnerPhotoPreview = document.querySelector("#new-runner-photo-preview");
 const newRunnerCity = document.querySelector("#new-runner-city");
 const newRunnerCountry = document.querySelector("#new-runner-country");
 const newRunnerClub = document.querySelector("#new-runner-club");
@@ -51,6 +53,8 @@ const signupFields = {
   name: document.querySelector("#signup-name"),
   email: document.querySelector("#signup-email"),
   photoUrl: document.querySelector("#signup-photo"),
+  photoFile: document.querySelector("#signup-photo-file"),
+  photoPreview: document.querySelector("#signup-photo-preview"),
   city: document.querySelector("#signup-city"),
   country: document.querySelector("#signup-country"),
   club: document.querySelector("#signup-club"),
@@ -77,10 +81,18 @@ const adminMessageSubject = document.querySelector("#admin-message-subject");
 const adminMessageBody = document.querySelector("#admin-message-body");
 const adminMessageStatus = document.querySelector("#admin-message-status");
 const adminMessageList = document.querySelector("#admin-message-list");
+const messageBadge = document.querySelector("#message-badge");
+const adminMessageBadge = document.querySelector("#admin-message-badge");
+const markMessagesReadButton = document.querySelector("#mark-messages-read");
+const adminMarkMessagesReadButton = document.querySelector("#admin-mark-messages-read");
+const sendNewsletterButton = document.querySelector("#send-newsletter");
+const newsletterStatus = document.querySelector("#newsletter-status");
 const profileFields = {
   name: document.querySelector("#profile-name"),
   email: document.querySelector("#profile-email"),
   photoUrl: document.querySelector("#profile-photo"),
+  photoFile: document.querySelector("#profile-photo-file"),
+  photoPreview: document.querySelector("#profile-photo-preview"),
   city: document.querySelector("#profile-city"),
   country: document.querySelector("#profile-country"),
   club: document.querySelector("#profile-club"),
@@ -164,6 +176,7 @@ let runnerAccountRows = [];
 let passwordResetRows = [];
 let messageRows = [];
 let messageRecipients = [];
+let unreadMessageCount = 0;
 let selectedAthlete = null;
 let signupOpen = false;
 let language = localStorage.getItem("runners-league-language") || "pt";
@@ -248,6 +261,11 @@ const text = {
     messageText: "Mensagem",
     sendMessage: "Enviar mensagem",
     noMessages: "Sem mensagens.",
+    unreadMessages: "mensagens novas",
+    markRead: "Marcar como lidas",
+    photoTooLarge: "A imagem é demasiado grande. Usa uma foto com menos de 900 KB.",
+    invalidPhoto: "Escolhe um ficheiro de imagem válido.",
+    newsletterSent: "Newsletter enviada.",
     sent: "Enviada",
     received: "Recebida",
     system: "Sistema",
@@ -333,6 +351,11 @@ const text = {
     messageText: "Message",
     sendMessage: "Send message",
     noMessages: "No messages.",
+    unreadMessages: "new messages",
+    markRead: "Mark as read",
+    photoTooLarge: "The image is too large. Use a photo under 900 KB.",
+    invalidPhoto: "Choose a valid image file.",
+    newsletterSent: "Newsletter sent.",
     sent: "Sent",
     received: "Received",
     system: "System",
@@ -370,6 +393,11 @@ const staticText = {
   "Assunto": "Subject",
   "Mensagem": "Message",
   "Enviar mensagem": "Send message",
+  "Marcar como lidas": "Mark as read",
+  "Newsletter mensal": "Monthly newsletter",
+  "Envia o resumo do mês para a caixa de mensagens dos atletas. Se o email estiver configurado no servidor, envia também por email.":
+    "Sends the monthly summary to athletes' message inboxes. If email is configured on the server, it also sends by email.",
+  "Enviar newsletter do mês": "Send monthly newsletter",
   "0 provas": "0 races",
   "Inscrição de atleta": "Athlete registration",
   "Criar inscrição": "Create registration",
@@ -385,6 +413,8 @@ const staticText = {
   "Nome": "Name",
   "Email": "Email",
   "URL da foto": "Photo URL",
+  "URL da foto ou ficheiro": "Photo URL or file",
+  "Escolher foto": "Choose photo",
   "Cidade": "City",
   "País": "Country",
   "Clube": "Club",
@@ -522,6 +552,7 @@ const serverText = {
   "Só o acesso geral pode alterar passwords": "Only general access can change passwords",
   "Atleta não encontrado": "Athlete not found",
   "Nome do atleta demasiado curto": "Athlete name is too short",
+  "A imagem é demasiado grande. Usa uma foto com menos de 900 KB.": "The image is too large. Use a photo under 900 KB.",
   "Ano de nascimento inválido": "Invalid birth year",
   "Já existe um atleta com esse nome": "An athlete with that name already exists",
   "Inscrição criada. Já podes entrar como atleta.": "Registration created. You can now log in as an athlete.",
@@ -532,6 +563,10 @@ const serverText = {
   "Escreve uma mensagem": "Write a message",
   "Destinatário não encontrado": "Recipient not found",
   "Mensagem enviada.": "Message sent.",
+  "Mensagens marcadas como lidas.": "Messages marked as read.",
+  "Newsletter enviada.": "Newsletter sent.",
+  "A newsletter deste mês já foi enviada.": "This month's newsletter has already been sent.",
+  "Só o acesso geral pode enviar newsletters": "Only general access can send newsletters",
   "Password do acesso geral atualizada.": "General access password updated.",
   "Pedido registado. O acesso geral pode agora definir uma nova password.": "Request registered. General access can now set a new password.",
   "Só o acesso geral pode resolver pedidos de recuperação": "Only general access can resolve recovery requests",
@@ -580,6 +615,40 @@ function t(key, ...args) {
 function localizeServerMessage(message) {
   if (language === "pt") return message;
   return serverText[message] || message;
+}
+
+function renderPhotoPreview(urlInput, preview) {
+  if (!preview) return;
+  const value = urlInput.value.trim();
+  preview.innerHTML = value
+    ? `<span>${language === "pt" ? "Pré-visualização" : "Preview"}</span><img src="${escapeHtml(value)}" alt="" />`
+    : "";
+}
+
+function attachPhotoPicker(fileInput, urlInput, preview, statusTarget) {
+  if (!fileInput || !urlInput) return;
+  urlInput.addEventListener("input", () => renderPhotoPreview(urlInput, preview));
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      if (statusTarget) statusTarget.textContent = t("invalidPhoto");
+      fileInput.value = "";
+      return;
+    }
+    if (file.size > 900 * 1024) {
+      if (statusTarget) statusTarget.textContent = t("photoTooLarge");
+      fileInput.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      urlInput.value = reader.result;
+      renderPhotoPreview(urlInput, preview);
+      if (statusTarget) statusTarget.textContent = "";
+    });
+    reader.readAsDataURL(file);
+  });
 }
 
 function translateStaticContent() {
@@ -1136,6 +1205,7 @@ function renderProfileManagement() {
     profileFields.name.value = profile.name || "";
     profileFields.email.value = profile.email || "";
     profileFields.photoUrl.value = profile.photoUrl || "";
+    renderPhotoPreview(profileFields.photoUrl, profileFields.photoPreview);
     profileFields.city.value = profile.city || "";
     profileFields.country.value = profile.country || "";
     profileFields.club.value = profile.club || "";
@@ -1183,6 +1253,7 @@ function renderMessageRecipients() {
 function renderMessages() {
   const targetList = session?.type === "general" ? adminMessageList : messageList;
   if (!targetList) return;
+  updateMessageBadges();
   targetList.innerHTML = messageRows.length
     ? messageRows
         .map(
@@ -1198,6 +1269,18 @@ function renderMessages() {
         )
         .join("")
     : `<article class="message-item empty-state"><strong>${t("noMessages")}</strong></article>`;
+}
+
+function updateMessageBadges() {
+  const targets = [messageBadge, adminMessageBadge];
+  targets.forEach((badge) => {
+    if (!badge) return;
+    badge.textContent = unreadMessageCount;
+    badge.classList.toggle("hidden", unreadMessageCount < 1);
+  });
+  profileNavButton.classList.toggle("has-notification", session?.type === "runner" && unreadMessageCount > 0);
+  if (markMessagesReadButton) markMessagesReadButton.disabled = unreadMessageCount < 1;
+  if (adminMarkMessagesReadButton) adminMarkMessagesReadButton.disabled = unreadMessageCount < 1;
 }
 
 function leaguePositionForRunner(runner) {
@@ -1507,6 +1590,7 @@ async function loadMessages() {
   const data = await apiRequest("/api/messages");
   messageRows = data.messages;
   messageRecipients = data.recipients;
+  unreadMessageCount = data.unreadCount || 0;
   renderMessageRecipients();
   renderMessages();
 }
@@ -1617,6 +1701,7 @@ signupForm.addEventListener("submit", async (event) => {
     profileSelect.value = signupFields.name.value.trim();
     signupForm.reset();
     signupFields.shareProfile.checked = true;
+    renderPhotoPreview(signupFields.photoUrl, signupFields.photoPreview);
     signupOpen = false;
     loginMessage.textContent = data.message;
     renderSession();
@@ -1741,6 +1826,7 @@ async function submitMessage(formType) {
       }),
     });
     messageRows = data.messages;
+    unreadMessageCount = data.unreadCount || 0;
     subject.value = "";
     body.value = "";
     status.textContent = data.message;
@@ -1758,6 +1844,34 @@ messageForm.addEventListener("submit", (event) => {
 adminMessageForm.addEventListener("submit", (event) => {
   event.preventDefault();
   submitMessage("admin");
+});
+
+async function markMessagesRead() {
+  if (!session) return;
+  const targetStatus = session.type === "general" ? adminMessageStatus : messageStatus;
+  try {
+    const data = await apiRequest("/api/messages/read", { method: "POST" });
+    messageRows = data.messages;
+    unreadMessageCount = data.unreadCount || 0;
+    if (targetStatus) targetStatus.textContent = data.message;
+    renderMessages();
+  } catch (error) {
+    if (targetStatus) targetStatus.textContent = error.message;
+  }
+}
+
+markMessagesReadButton.addEventListener("click", markMessagesRead);
+adminMarkMessagesReadButton.addEventListener("click", markMessagesRead);
+
+sendNewsletterButton.addEventListener("click", async () => {
+  newsletterStatus.textContent = "";
+  try {
+    const data = await apiRequest("/api/newsletter/monthly", { method: "POST" });
+    newsletterStatus.textContent = `${data.message} ${data.recipientCount} atletas receberam na caixa de mensagens. ${data.emailCount} emails enviados.`;
+    await loadMessages();
+  } catch (error) {
+    newsletterStatus.textContent = error.message;
+  }
 });
 
 profileRaceList.addEventListener("click", async (event) => {
@@ -1827,6 +1941,8 @@ createRunnerForm.addEventListener("submit", async (event) => {
   newRunnerName.value = "";
   newRunnerEmail.value = "";
   newRunnerPhoto.value = "";
+  newRunnerPhotoFile.value = "";
+  renderPhotoPreview(newRunnerPhoto, newRunnerPhotoPreview);
   newRunnerCity.value = "";
   newRunnerCountry.value = "";
   newRunnerClub.value = "";
@@ -1927,6 +2043,10 @@ deleteSubmissionButton.addEventListener("click", async () => {
   renderCurrent();
   renderPendingValidations();
 });
+
+attachPhotoPicker(signupFields.photoFile, signupFields.photoUrl, signupFields.photoPreview, signupMessage);
+attachPhotoPicker(newRunnerPhotoFile, newRunnerPhoto, newRunnerPhotoPreview, loginMessage);
+attachPhotoPicker(profileFields.photoFile, profileFields.photoUrl, profileFields.photoPreview, profileMessage);
 
 collectStaticText();
 collectStaticAttributes();

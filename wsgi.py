@@ -18,12 +18,15 @@ from server import (
     fetch_current_runner_profile,
     fetch_message_recipients,
     fetch_messages,
+    generate_monthly_newsletter,
     init_db,
     login_user,
+    mark_messages_read,
     register_runner_account,
     request_password_reset,
     resolve_password_reset,
     session_for_token,
+    unread_message_count,
     update_current_runner_profile,
     update_runner_password,
     update_session_password,
@@ -101,7 +104,14 @@ def route_api(environ, start_response):
             user, error = require_auth(environ, start_response)
             if error:
                 return error
-            return json_response(start_response, {"messages": fetch_messages(user), "recipients": fetch_message_recipients(user)})
+            return json_response(
+                start_response,
+                {
+                    "messages": fetch_messages(user),
+                    "recipients": fetch_message_recipients(user),
+                    "unreadCount": unread_message_count(user),
+                },
+            )
 
         if method == "POST" and path == "/api/login":
             return json_response(start_response, {"session": login_user(read_json(environ))})
@@ -159,6 +169,18 @@ def route_api(environ, start_response):
             if error:
                 return error
             return json_response(start_response, create_message(read_json(environ), user), "201 Created")
+
+        if method == "POST" and path == "/api/messages/read":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, mark_messages_read(user))
+
+        if method == "POST" and path == "/api/newsletter/monthly":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, generate_monthly_newsletter(user))
 
         if method == "POST" and path == "/api/submissions/update":
             user, error = require_auth(environ, start_response)

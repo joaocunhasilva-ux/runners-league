@@ -1,11 +1,14 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from email.message import EmailMessage
 import hashlib
 import hmac
 import json
 import os
 import secrets
+import smtplib
 import sqlite3
-from datetime import date
+import sys
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 
@@ -148,6 +151,19 @@ def init_db():
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (sender_user_id) REFERENCES users(id),
                 FOREIGN KEY (recipient_user_id) REFERENCES users(id)
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS newsletters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                month_key TEXT NOT NULL UNIQUE,
+                subject TEXT NOT NULL,
+                body TEXT NOT NULL,
+                recipient_count INTEGER NOT NULL DEFAULT 0,
+                email_count INTEGER NOT NULL DEFAULT 0,
+                sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
@@ -329,6 +345,13 @@ def runner_profile_payload(row, include_private=False):
     }
 
 
+def photo_value(payload):
+    value = payload.get("photoUrl", "").strip()
+    if len(value) > 1300000:
+        raise ValueError("A imagem é demasiado grande. Usa uma foto com menos de 900 KB.")
+    return value
+
+
 def fetch_runner_profiles(include_private=False):
     with connect() as connection:
         rows = connection.execute(
@@ -427,7 +450,7 @@ def update_current_runner_profile(payload, user):
             """,
             (
                 name,
-                payload.get("photoUrl", "").strip(),
+                photo_value(payload),
                 payload.get("email", "").strip(),
                 payload.get("city", "").strip(),
                 payload.get("country", "").strip(),
@@ -568,6 +591,35 @@ def fetch_messages(user):
     return [message_payload(row) for row in rows]
 
 
+def unread_message_count(user):
+    with connect() as connection:
+        return connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM messages
+            WHERE recipient_user_id = ?
+              AND read_at IS NULL
+              AND COALESCE(sender_user_id, -1) != ?
+            """,
+            (user["id"], user["id"]),
+        ).fetchone()[0]
+
+
+def mark_messages_read(user):
+    with connect() as connection:
+        connection.execute(
+            """
+            UPDATE messages
+            SET read_at = CURRENT_TIMESTAMP
+            WHERE recipient_user_id = ?
+              AND read_at IS NULL
+              AND COALESCE(sender_user_id, -1) != ?
+            """,
+            (user["id"], user["id"]),
+        )
+    return {"messages": fetch_messages(user), "unreadCount": unread_message_count(user), "message": "Mensagens marcadas como lidas."}
+
+
 def fetch_message_recipients(user):
     with connect() as connection:
         rows = connection.execute(
@@ -604,7 +656,7 @@ def create_message(payload, user):
             """,
             (user["id"], recipient["id"], subject, body),
         )
-    return {"messages": fetch_messages(user), "message": "Mensagem enviada."}
+    return {"messages": fetch_messages(user), "unreadCount": unread_message_count(user), "message": "Mensagem enviada."}
 
 
 def create_system_message(connection, recipient_user_id, subject, body, sender_user_id=None):
@@ -615,6 +667,126 @@ def create_system_message(connection, recipient_user_id, subject, body, sender_u
         """,
         (sender_user_id, recipient_user_id, subject, body),
     )
+
+
+def previous_month_key(today=None):
+    today = today or date.today()
+    first_day = today.replace(day=1)
+    previous = first_day - timedelta(days=1)
+    return previous.strftime("%Y-%m")
+
+
+def newsletter_month_label(month_key):
+    year, month = month_key.split("-")
+    return f"{month}/{year}"
+
+
+def send_newsletter_email(recipient, subject, body):
+    host = os.environ.get("RUNNERS_LEAGUE_SMTP_HOST")
+    if not host or not recipient["email"]:
+        return False
+    port = int(os.environ.get("RUNNERS_LEAGUE_SMTP_PORT", "587"))
+    username = os.environ.get("RUNNERS_LEAGUE_SMTP_USER")
+    password = os.environ.get("RUNNERS_LEAGUE_SMTP_PASSWORD")
+    sender = os.environ.get("RUNNERS_LEAGUE_SMTP_FROM") or username
+    if not sender:
+        return False
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = recipient["email"]
+    message.set_content(body)
+
+    with smtplib.SMTP(host, port, timeout=20) as smtp:
+        smtp.starttls()
+        if username and password:
+            smtp.login(username, password)
+        smtp.send_message(message)
+    return True
+
+
+def generate_monthly_newsletter(user=None, month_key=None):
+    if user is not None and user["role"] != "general":
+        raise PermissionError("Só o acesso geral pode enviar newsletters")
+
+    month_key = month_key or previous_month_key()
+    subject = f"Runners League · Resultado mensal {newsletter_month_label(month_key)}"
+
+    with connect() as connection:
+        existing = connection.execute("SELECT id FROM newsletters WHERE month_key = ?", (month_key,)).fetchone()
+        if existing is not None:
+            raise ValueError("A newsletter deste mês já foi enviada.")
+
+        rows = connection.execute(
+            """
+            SELECT
+                runners.name,
+                COUNT(submissions.id) AS races,
+                MIN(submissions.total_seconds * 1.0 / submissions.distance_km) AS best_pace,
+                GROUP_CONCAT(submissions.race_name, ', ') AS race_names
+            FROM submissions
+            JOIN runners ON runners.id = submissions.runner_id
+            WHERE submissions.validation_status = 'approved'
+              AND strftime('%Y-%m', submissions.created_at) = ?
+            GROUP BY runners.id, runners.name
+            ORDER BY races DESC, best_pace ASC
+            LIMIT 10
+            """,
+            (month_key,),
+        ).fetchall()
+        recipients = connection.execute(
+            """
+            SELECT users.id, users.name, runners.email
+            FROM users
+            JOIN runners ON runners.id = users.runner_id
+            WHERE users.role = 'runner'
+            ORDER BY users.name
+            """
+        ).fetchall()
+        admin = connection.execute("SELECT id FROM users WHERE role = 'general' ORDER BY id LIMIT 1").fetchone()
+
+        if rows:
+            lines = [f"Resultado mensal da Runners League ({newsletter_month_label(month_key)})", ""]
+            for index, row in enumerate(rows, start=1):
+                pace = int(row["best_pace"] or 0)
+                minutes, seconds = divmod(pace, 60)
+                lines.append(f"{index}. {row['name']} · {row['races']} prova(s) aprovadas · melhor ritmo {minutes}:{seconds:02d}/km")
+            lines.extend(["", "Continua a submeter provas oficiais e a acompanhar a liga em https://rljc.pythonanywhere.com"])
+        else:
+            lines = [
+                f"Resultado mensal da Runners League ({newsletter_month_label(month_key)})",
+                "",
+                "Ainda não houve provas aprovadas neste mês.",
+                "",
+                "Continua a submeter provas oficiais em https://rljc.pythonanywhere.com",
+            ]
+        body = "\n".join(lines)
+
+        email_count = 0
+        for recipient in recipients:
+            create_system_message(connection, recipient["id"], subject, body, admin["id"] if admin else None)
+            try:
+                if send_newsletter_email(recipient, subject, body):
+                    email_count += 1
+            except Exception:
+                pass
+
+        connection.execute(
+            """
+            INSERT INTO newsletters (month_key, subject, body, recipient_count, email_count)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (month_key, subject, body, len(recipients), email_count),
+        )
+
+    return {
+        "message": "Newsletter enviada.",
+        "month": month_key,
+        "recipientCount": len(recipients),
+        "emailCount": email_count,
+        "emailConfigured": bool(os.environ.get("RUNNERS_LEAGUE_SMTP_HOST")),
+    }
 
 
 def fetch_submissions():
@@ -777,7 +949,7 @@ def create_runner_account(payload, user):
             WHERE id = ?
             """,
             (
-                payload.get("photoUrl", "").strip(),
+                photo_value(payload),
                 payload.get("email", "").strip(),
                 payload.get("city", "").strip(),
                 payload.get("country", "").strip(),
@@ -835,7 +1007,7 @@ def register_runner_account(payload):
             WHERE id = ?
             """,
             (
-                payload.get("photoUrl", "").strip(),
+                photo_value(payload),
                 payload.get("email", "").strip(),
                 payload.get("city", "").strip(),
                 payload.get("country", "").strip(),
@@ -1087,7 +1259,13 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
             user = self.require_auth()
             if user is None:
                 return
-            self.send_json({"messages": fetch_messages(user), "recipients": fetch_message_recipients(user)})
+            self.send_json(
+                {
+                    "messages": fetch_messages(user),
+                    "recipients": fetch_message_recipients(user),
+                    "unreadCount": unread_message_count(user),
+                }
+            )
             return
         super().do_GET()
 
@@ -1190,6 +1368,23 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
             return
+        if self.path == "/api/messages/read":
+            user = self.require_auth()
+            if user is None:
+                return
+            self.send_json(mark_messages_read(user))
+            return
+        if self.path == "/api/newsletter/monthly":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(generate_monthly_newsletter(user))
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
+            return
         if self.path == "/api/submissions/update":
             user = self.require_auth()
             if user is None:
@@ -1241,6 +1436,13 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
+    if "--send-monthly-newsletter" in sys.argv:
+        result = generate_monthly_newsletter()
+        print(
+            f"{result['message']} {result['recipientCount']} atletas, "
+            f"{result['emailCount']} emails, mês {result['month']}."
+        )
+        raise SystemExit(0)
     port = int(os.environ.get("PORT", "4173"))
     host = os.environ.get("HOST", "127.0.0.1")
     server = ThreadingHTTPServer((host, port), RunnersLeagueHandler)

@@ -89,9 +89,14 @@
                 <input id="signup-email" type="email" autocomplete="email" />
               </label>
               <label>
-                URL da foto
-                <input id="signup-photo" type="url" placeholder="https://..." />
+                URL da foto ou ficheiro
+                <input id="signup-photo" type="text" placeholder="https://..." />
               </label>
+              <label>
+                Escolher foto
+                <input id="signup-photo-file" type="file" accept="image/*" />
+              </label>
+              <div id="signup-photo-preview" class="photo-preview" aria-live="polite"></div>
               <div class="form-grid">
                 <label>
                   Cidade
@@ -181,9 +186,14 @@
                 <input id="new-runner-email" type="email" autocomplete="email" />
               </label>
               <label>
-                URL da foto
-                <input id="new-runner-photo" type="url" placeholder="https://..." />
+                URL da foto ou ficheiro
+                <input id="new-runner-photo" type="text" placeholder="https://..." />
               </label>
+              <label>
+                Escolher foto
+                <input id="new-runner-photo-file" type="file" accept="image/*" />
+              </label>
+              <div id="new-runner-photo-preview" class="photo-preview" aria-live="polite"></div>
               <div class="form-grid">
                 <label>
                   Cidade
@@ -267,6 +277,10 @@
 
             <section class="admin-form admin-form-medium">
               <h2>Mensagens</h2>
+              <div class="admin-section-note">
+                <span id="admin-message-badge" class="notification-badge hidden">0</span>
+                <button id="admin-mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
+              </div>
               <form id="admin-message-form" class="message-form">
                 <label>
                   Destinatário
@@ -296,6 +310,16 @@
                 <input id="validation-search" type="search" placeholder="Atleta ou prova" />
               </label>
               <div id="pending-validations" class="validation-list"></div>
+            </section>
+
+            <section class="admin-form admin-form-medium">
+              <h2>Newsletter mensal</h2>
+              <p class="form-note">Envia o resumo do mês para a caixa de mensagens dos atletas. Se o email estiver configurado no servidor, envia também por email.</p>
+              <button id="send-newsletter" class="primary-action compact-action" type="button">
+                <span aria-hidden="true">↗</span>
+                Enviar newsletter do mês
+              </button>
+              <p id="newsletter-status" class="form-note" role="status"></p>
             </section>
 
             <form id="edit-submission-form" class="admin-form admin-form-wide">
@@ -575,9 +599,14 @@
               </label>
             </div>
             <label>
-              URL da foto
-              <input id="profile-photo" type="url" placeholder="https://..." />
+              URL da foto ou ficheiro
+              <input id="profile-photo" type="text" placeholder="https://..." />
             </label>
+            <label>
+              Escolher foto
+              <input id="profile-photo-file" type="file" accept="image/*" />
+            </label>
+            <div id="profile-photo-preview" class="photo-preview" aria-live="polite"></div>
             <div class="form-grid">
               <label>
                 Cidade
@@ -624,8 +653,9 @@
           <section class="messages-panel">
             <div class="section-title">
               <h2>Mensagens</h2>
-              <span>Caixa de entrada</span>
+              <span><span id="message-badge" class="notification-badge hidden">0</span> Caixa de entrada</span>
             </div>
+            <button id="mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
             <form id="message-form" class="message-form">
               <div class="form-grid">
                 <label>
