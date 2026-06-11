@@ -69,7 +69,18 @@ textarea:disabled {
 
 .app-shell {
   min-height: 100vh;
-  padding: 0;
+  padding: 54px 0 0;
+  position: relative;
+}
+
+.global-controls {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .workspace {
@@ -151,14 +162,23 @@ body[data-theme="light"] .concept-hero {
 }
 
 .brand-row {
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 12px;
   margin-bottom: 18px;
 }
 
 .brand-logo {
   display: block;
-  width: min(100%, 260px);
+  width: 132px;
   height: auto;
+  aspect-ratio: 8 / 3;
+  object-fit: contain;
+  padding: 6px;
+  background: linear-gradient(145deg, rgba(2, 9, 21, 0.96), rgba(8, 35, 70, 0.82));
+  border: 1px solid rgba(77, 177, 255, 0.28);
+  border-radius: 8px;
+  box-shadow: var(--tight-shadow);
 }
 
 .brand-mark {
@@ -272,27 +292,28 @@ form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
-  max-width: 142px;
-  margin: -8px 0 10px auto;
+  width: 116px;
+  margin: 0;
   padding: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(5, 21, 43, 0.78);
   border: 1px solid var(--line);
   border-radius: 999px;
+  box-shadow: var(--tight-shadow);
+  backdrop-filter: blur(16px);
 }
 
 .theme-switch {
-  margin-top: 0;
-  margin-bottom: 20px;
+  width: 132px;
 }
 
 .lang-button,
 .theme-button {
-  min-height: 30px;
+  min-height: 28px;
   color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -1707,6 +1728,110 @@ progress::-moz-progress-bar {
   gap: 10px;
 }
 
+.sponsors-page {
+  display: none;
+  gap: 16px;
+}
+
+.sponsors-page.active {
+  display: grid;
+}
+
+.sponsor-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+  gap: 16px;
+  align-items: stretch;
+  padding: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(19, 169, 255, 0.28), transparent 34%),
+    linear-gradient(135deg, rgba(5, 21, 43, 0.94), rgba(8, 35, 70, 0.84));
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+body[data-theme="light"] .sponsor-hero {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(19, 169, 255, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(232, 243, 251, 0.9));
+}
+
+.sponsor-hero > div:first-child {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+}
+
+.sponsor-hero span {
+  width: fit-content;
+  padding: 7px 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6a00, var(--coral));
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sponsor-hero h2 {
+  max-width: 640px;
+  font-size: clamp(1.6rem, 3vw, 2.45rem);
+  text-transform: uppercase;
+}
+
+.sponsor-hero p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.sponsor-mail-action {
+  width: fit-content;
+  min-width: 190px;
+  text-decoration: none;
+}
+
+.sponsor-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 320px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(2, 9, 21, 0.78), rgba(8, 35, 70, 0.72)),
+    repeating-linear-gradient(90deg, rgba(77, 177, 255, 0.08) 0 1px, transparent 1px 16.66%);
+  border: 1px solid rgba(77, 177, 255, 0.3);
+  border-radius: 10px;
+  box-shadow: inset 0 0 42px rgba(19, 169, 255, 0.1);
+}
+
+.sponsor-board i {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px dashed rgba(126, 211, 255, 0.32);
+  border-radius: 6px;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.sponsor-board .sold {
+  border: 0;
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+  box-shadow: 0 14px 30px rgba(8, 117, 209, 0.22);
+}
+
+.sponsor-board .reserved {
+  border-style: solid;
+  background: linear-gradient(135deg, rgba(255, 122, 26, 0.82), rgba(242, 184, 75, 0.8));
+}
+
 .support-card {
   display: grid;
   align-content: start;
@@ -1909,11 +2034,31 @@ progress::-moz-progress-bar {
   .rules-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .sponsor-hero {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 740px) {
   .app-shell {
-    padding: 12px;
+    padding: 60px 12px 12px;
+  }
+
+  .global-controls {
+    position: fixed;
+    top: 10px;
+    right: 12px;
+    left: 12px;
+    justify-content: flex-end;
+  }
+
+  .language-switch {
+    width: 104px;
+  }
+
+  .theme-switch {
+    width: 118px;
   }
 
   .submit-panel,
@@ -1951,6 +2096,7 @@ progress::-moz-progress-bar {
   .concept-hero,
   .rules-grid,
   .support-grid,
+  .sponsor-hero,
   .sponsor-card,
   .athlete-hero,
   .table-row,
@@ -1971,7 +2117,20 @@ progress::-moz-progress-bar {
   }
 
   .side-nav {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brand-row {
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  .brand-logo {
+    width: 104px;
+  }
+
+  .sponsor-board {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: auto;
   }
 
   .admin-dashboard-header {

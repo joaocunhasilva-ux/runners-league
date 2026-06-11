@@ -9,6 +9,18 @@
   </head>
   <body>
     <main class="app-shell">
+      <div class="global-controls">
+        <div class="language-switch" aria-label="Idioma">
+          <button class="lang-button active" type="button" data-lang="pt">PT</button>
+          <button class="lang-button" type="button" data-lang="en">EN</button>
+        </div>
+
+        <div class="theme-switch" aria-label="Tema">
+          <button class="theme-button active" type="button" data-theme="dark">Noite</button>
+          <button class="theme-button" type="button" data-theme="light">Dia</button>
+        </div>
+      </div>
+
       <section class="workspace">
         <aside class="submit-panel" aria-label="Sessão e submissão">
           <div class="brand-row">
@@ -23,17 +35,8 @@
             <button class="nav-button active" type="button" data-view="league">Liga</button>
             <button id="profile-nav" class="nav-button hidden" type="button" data-view="profile">Meu perfil</button>
             <button class="nav-button" type="button" data-view="rules">Conceito e regras</button>
+            <button class="nav-button" type="button" data-view="sponsors">Patrocinadores</button>
           </nav>
-
-          <div class="language-switch" aria-label="Idioma">
-            <button class="lang-button active" type="button" data-lang="pt">PT</button>
-            <button class="lang-button" type="button" data-lang="en">EN</button>
-          </div>
-
-          <div class="theme-switch" aria-label="Tema">
-            <button class="theme-button active" type="button" data-theme="dark">Noite</button>
-            <button class="theme-button" type="button" data-theme="light">Dia</button>
-          </div>
 
           <section id="login-panel" class="login-panel">
             <fieldset>
@@ -793,39 +796,6 @@
             </article>
           </section>
 
-          <section class="support-grid" aria-label="Apoiar a Runners League">
-            <article class="support-card coffee-card">
-              <span>Apoiar</span>
-              <h3>Paga-me um café</h3>
-              <p>Um contributo simbólico de 2€ ajuda a manter a liga online, melhorar a experiência e continuar a desenvolver novas funcionalidades.</p>
-              <div class="payment-actions">
-                <a class="support-action" href="https://www.paypal.com/paypalme/joaocunhasilva/2" target="_blank" rel="noreferrer">
-                  <strong>2€</strong>
-                  Pagar por PayPal
-                </a>
-                <button id="mbway-action" class="support-action" type="button" data-mbway-phone="919681661">
-                  <strong>MB WAY</strong>
-                  <span>919 681 661</span>
-                </button>
-              </div>
-            </article>
-            <article class="support-card sponsor-card">
-              <span>Patrocínios</span>
-              <h3>Espaço para anunciantes</h3>
-              <p>Marcas locais, clubes e parceiros podem comprar quadrados na grelha de patrocinadores. Cada quadrado custa 2€ e pode formar blocos maiores.</p>
-              <div class="sponsor-grid" aria-hidden="true">
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-                <i></i><i></i><i></i><i></i><i></i><i></i>
-              </div>
-              <a class="support-action" href="mailto:joaocunhasilva@gmail.com?subject=Quero%20comprar%20spots%20de%20anunciante%20na%20Runners%20League&body=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20os%20spots%20para%20anunciantes%20da%20Runners%20League.%0A%0AEstou%20interessado%2Fa%20em%20comprar%20quadrados%20a%202%E2%82%AC%20cada.">
-                <strong>2€ / quadrado</strong>
-                Reservar spots
-              </a>
-            </article>
-          </section>
-
           <section class="scoring-table" aria-label="Componentes da pontuação">
             <div class="section-title">
               <h2>Componentes da pontuação</h2>
@@ -847,6 +817,70 @@
               <strong>Validação oficial</strong>
               <span>100 pontos quando aprovada, 25 pontos enquanto pendente, 0 quando rejeitada. Participação aprovada ou pendente recebe 50 pontos.</span>
             </div>
+          </section>
+        </section>
+
+        <section id="sponsors-page" class="league-view sponsors-page app-page" aria-label="Patrocinadores">
+          <div class="top-bar">
+            <div>
+              <p class="eyebrow">Parceiros</p>
+              <h2>Patrocinadores e apoio à liga</h2>
+            </div>
+          </div>
+
+          <section class="sponsor-hero">
+            <div>
+              <span>2€ por quadrado</span>
+              <h2>Uma montra simples para marcas que correm connosco.</h2>
+              <p>
+                Cada quadrado é um pequeno spot de presença. Marcas, clubes e parceiros podem comprar
+                um bloco simples ou juntar vários quadrados para criar mais destaque.
+              </p>
+              <a class="primary-action compact-action sponsor-mail-action" href="mailto:joaocunhasilva@gmail.com?subject=Quero%20comprar%20spots%20de%20anunciante%20na%20Runners%20League&body=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20os%20spots%20para%20anunciantes%20da%20Runners%20League.%0A%0AEstou%20interessado%2Fa%20em%20comprar%20quadrados%20a%202%E2%82%AC%20cada.">
+                <span aria-hidden="true">→</span>
+                Reservar spots
+              </a>
+            </div>
+            <div class="sponsor-board" aria-label="Grelha de spots de patrocinador">
+              <i class="sold brand-a">RUN</i><i></i><i></i><i class="sold brand-b">CAFÉ</i><i></i><i></i>
+              <i class="sold brand-a"></i><i class="sold brand-a"></i><i></i><i class="sold brand-b"></i><i class="sold brand-b"></i><i></i>
+              <i></i><i></i><i class="reserved"></i><i class="reserved"></i><i></i><i></i>
+              <i></i><i></i><i class="reserved"></i><i class="reserved"></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </section>
+
+          <section class="support-grid" aria-label="Apoiar a Runners League">
+            <article class="support-card coffee-card">
+              <span>Apoiar</span>
+              <h3>Paga-me um café</h3>
+              <p>Um contributo simbólico de 2€ ajuda a manter a liga online, melhorar a experiência e continuar a desenvolver novas funcionalidades.</p>
+              <div class="payment-actions">
+                <a class="support-action" href="https://www.paypal.com/paypalme/joaocunhasilva/2" target="_blank" rel="noreferrer">
+                  <strong>2€</strong>
+                  Pagar por PayPal
+                </a>
+                <button id="mbway-action" class="support-action" type="button" data-mbway-phone="919681661">
+                  <strong>MB WAY</strong>
+                  <span>919 681 661</span>
+                </button>
+              </div>
+            </article>
+            <article class="support-card sponsor-card">
+              <span>Formato</span>
+              <h3>Spots para anunciantes</h3>
+              <p>Compra por quadrado, combina blocos e cria destaque visual. Ideal para negócios locais, equipas, provas e marcas ligadas ao desporto.</p>
+              <div class="sponsor-grid" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <a class="support-action" href="mailto:joaocunhasilva@gmail.com?subject=Quero%20comprar%20spots%20de%20anunciante%20na%20Runners%20League&body=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20os%20spots%20para%20anunciantes%20da%20Runners%20League.%0A%0AEstou%20interessado%2Fa%20em%20comprar%20quadrados%20a%202%E2%82%AC%20cada.">
+                <strong>2€ / quadrado</strong>
+                Pedir informação
+              </a>
+            </article>
           </section>
         </section>
       </section>
