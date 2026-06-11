@@ -974,6 +974,43 @@ def create_runner_account(payload, user):
     return {"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles(), "runners": fetch_runner_accounts()}
 
 
+def delete_runner_account(payload, user):
+    if user["role"] != "general":
+        raise PermissionError("Só o acesso geral pode eliminar atletas")
+    name = payload.get("name", "").strip()
+    if not name:
+        raise ValueError("Atleta não encontrado")
+
+    with connect() as connection:
+        runner = connection.execute("SELECT id FROM runners WHERE name = ?", (name,)).fetchone()
+        if runner is None:
+            raise ValueError("Atleta não encontrado")
+        user_rows = connection.execute(
+            "SELECT id FROM users WHERE runner_id = ? OR (name = ? AND role = 'runner')",
+            (runner["id"], name),
+        ).fetchall()
+        user_ids = [row["id"] for row in user_rows]
+        if user_ids:
+            placeholders = ",".join("?" for _ in user_ids)
+            connection.execute(f"DELETE FROM sessions WHERE user_id IN ({placeholders})", user_ids)
+            connection.execute(
+                f"DELETE FROM messages WHERE sender_user_id IN ({placeholders}) OR recipient_user_id IN ({placeholders})",
+                [*user_ids, *user_ids],
+            )
+        connection.execute("DELETE FROM password_reset_requests WHERE runner_id = ?", (runner["id"],))
+        connection.execute("DELETE FROM submissions WHERE runner_id = ?", (runner["id"],))
+        connection.execute("DELETE FROM users WHERE runner_id = ? OR (name = ? AND role = 'runner')", (runner["id"], name))
+        connection.execute("DELETE FROM runners WHERE id = ?", (runner["id"],))
+
+    return {
+        "profiles": fetch_profiles(),
+        "runnerProfiles": fetch_runner_profiles(),
+        "runners": fetch_runner_accounts(),
+        "submissions": fetch_submissions(),
+        "message": "Atleta eliminado.",
+    }
+
+
 def register_runner_account(payload):
     name = payload.get("name", "").strip()
     password = payload.get("password", "")
@@ -1322,6 +1359,17 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
                 return
             try:
                 self.send_json(create_runner_account(self.read_json(), user), status=201)
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
+            return
+        if self.path == "/api/runners/delete":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(delete_runner_account(self.read_json(), user))
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
             except PermissionError as error:

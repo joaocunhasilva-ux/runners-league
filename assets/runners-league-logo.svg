@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">Runners League</title>
+  <desc id="desc">Logo Runners League com letra R azul, dois corredores e lettering desportivo.</desc>
+  <defs>
+    <linearGradient id="blue" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0a8dff"/>
+      <stop offset="0.45" stop-color="#00c9ff"/>
+      <stop offset="1" stop-color="#006cff"/>
+    </linearGradient>
+    <linearGradient id="white" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9e7f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="360" fill="#061426"/>
+  <g transform="translate(150 42)">
+    <path fill="url(#blue)" d="M160 0h250c53 0 93 42 93 94 0 51-38 93-89 96l74 90H370l-72-90H178l-52 90H0l78-136h202c25 0 45-20 45-45s-20-45-45-45H210L160 0Z"/>
+    <path fill="#061426" d="M55 66h202l-35 42H20l35-42Zm-32 70h197l-35 40H0l23-40Zm-22 69h151l-32 38H0l1-38Z"/>
+    <g fill="#061426">
+      <path d="M214 61c15 1 23 11 22 25-1 13-12 22-26 20-14-1-23-11-22-25 1-13 12-22 26-20Z"/>
+      <path d="M175 107c16-8 35-9 52-2l37 16 35-13 10 20-44 26-42-15-20 41 44 28-12 25-67-26-16-58-42 23-20-20 85-45Z"/>
+      <path d="M321 45c14 1 22 10 21 23-1 12-11 21-24 20-13-1-21-10-20-23 1-12 10-20 23-20Z"/>
+      <path d="M281 96c18-8 39-8 58 1l30 14 30-19 13 20-39 34-43-17-22 43 46 35-16 24-64-34-17-58-30 18-18-19 72-42Z"/>
+    </g>
+  </g>
+  <g transform="skewX(-10)">
+    <text x="112" y="288" fill="url(#white)" font-family="Arial Black, Impact, sans-serif" font-size="82" font-weight="900" letter-spacing="4">RUNNERS</text>
+    <text x="240" y="340" fill="url(#blue)" font-family="Arial Black, Impact, sans-serif" font-size="54" font-weight="900" letter-spacing="16">LEAGUE</text>
+  </g>
+</svg>

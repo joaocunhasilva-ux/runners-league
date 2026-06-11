@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Runners League</title>
+    <link rel="icon" href="./assets/runners-league-logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,17 +12,7 @@
       <section class="workspace">
         <aside class="submit-panel" aria-label="Sessão e submissão">
           <div class="brand-row">
-            <div class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 64 64" role="img">
-                <path class="logo-orbit" d="M12 39c5-16 18-26 39-26" />
-                <path class="logo-orbit logo-orbit-light" d="M15 48c8-17 22-27 38-31" />
-                <path class="logo-speed logo-speed-one" d="M9 21h23" />
-                <path class="logo-speed logo-speed-two" d="M5 32h30" />
-                <path class="logo-speed logo-speed-three" d="M11 43h19" />
-                <path class="logo-monogram" d="M25 47V20h10c7 0 11 3 11 8s-4 8-11 8h-10" />
-                <path class="logo-monogram" d="M42 47l-11-13" />
-              </svg>
-            </div>
+            <img class="brand-logo" src="./assets/runners-league-logo.svg" alt="Runners League" />
             <div>
               <p class="eyebrow">Runners League</p>
               <h1 id="panel-title">Entrar na liga</h1>
@@ -37,6 +28,11 @@
           <div class="language-switch" aria-label="Idioma">
             <button class="lang-button active" type="button" data-lang="pt">PT</button>
             <button class="lang-button" type="button" data-lang="en">EN</button>
+          </div>
+
+          <div class="theme-switch" aria-label="Tema">
+            <button class="theme-button active" type="button" data-theme="dark">Noite</button>
+            <button class="theme-button" type="button" data-theme="light">Dia</button>
           </div>
 
           <section id="login-panel" class="login-panel">
@@ -276,7 +272,7 @@
             </section>
 
             <section class="admin-form admin-form-medium">
-              <h2>Mensagens</h2>
+              <h2>Chat da liga</h2>
               <div class="admin-section-note">
                 <span id="admin-message-badge" class="notification-badge hidden">0</span>
                 <button id="admin-mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
@@ -545,7 +541,17 @@
           </section>
 
           <section class="score-band">
-            <canvas id="route-canvas" width="900" height="320" aria-label="Visualização da prova"></canvas>
+            <canvas id="route-canvas" class="hidden-canvas" width="900" height="320" aria-label="Visualização da prova"></canvas>
+            <div class="athlete-directory-panel">
+              <div class="section-title">
+                <div>
+                  <p class="eyebrow">Comunidade</p>
+                  <h2>Atletas inscritos</h2>
+                </div>
+                <span>Perfis públicos</span>
+              </div>
+              <div id="registered-athletes" class="registered-athletes"></div>
+            </div>
             <div class="score-card">
               <p class="eyebrow">Pontuação estimada</p>
               <strong id="score">0</strong>
@@ -689,7 +695,7 @@
 
           <section class="messages-panel">
             <div class="section-title">
-              <h2>Mensagens</h2>
+              <h2>Chat da liga</h2>
               <span><span id="message-badge" class="notification-badge hidden">0</span> Caixa de entrada</span>
             </div>
             <button id="mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
@@ -797,10 +803,10 @@
                   <strong>2€</strong>
                   Pagar por PayPal
                 </a>
-                <div class="support-action support-action-static">
+                <button id="mbway-action" class="support-action" type="button" data-mbway-phone="919681661">
                   <strong>MB WAY</strong>
-                  919 681 661
-                </div>
+                  <span>919 681 661</span>
+                </button>
               </div>
             </article>
             <article class="support-card sponsor-card">
