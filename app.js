@@ -41,6 +41,9 @@ const newAdminPassword = document.querySelector("#new-admin-password");
 const adminPasswordMessage = document.querySelector("#admin-password-message");
 const passwordResetRequests = document.querySelector("#password-reset-requests");
 const runnerAccounts = document.querySelector("#runner-accounts");
+const runnerAccountSearch = document.querySelector("#runner-account-search");
+const runnerAccountsCount = document.querySelector("#runner-accounts-count");
+const runnerAccountsStatus = document.querySelector("#runner-accounts-status");
 const newRunnerEmail = document.querySelector("#new-runner-email");
 const newRunnerPhoto = document.querySelector("#new-runner-photo");
 const newRunnerPhotoFile = document.querySelector("#new-runner-photo-file");
@@ -71,6 +74,7 @@ const profileManagementSummary = document.querySelector("#profile-management-sum
 const profileRaceList = document.querySelector("#profile-race-list");
 const profileRaceCount = document.querySelector("#profile-race-count");
 const profileMessage = document.querySelector("#profile-message");
+const cancelProfileEdit = document.querySelector("#cancel-profile-edit");
 const messageForm = document.querySelector("#message-form");
 const messageRecipient = document.querySelector("#message-recipient");
 const messageSubject = document.querySelector("#message-subject");
@@ -183,8 +187,10 @@ let messageRecipients = [];
 let unreadMessageCount = 0;
 let selectedAthlete = null;
 let signupOpen = false;
+let profileEditOpen = false;
 let language = localStorage.getItem("runners-league-language") || "pt";
-let theme = localStorage.getItem("runners-league-theme") || "dark";
+let theme = localStorage.getItem("runners-league-theme") || "auto";
+const systemTheme = window.matchMedia?.("(prefers-color-scheme: light)");
 let session = JSON.parse(localStorage.getItem("runners-league-session") || "null");
 if (session && !session.token) {
   session = null;
@@ -240,6 +246,7 @@ const text = {
     reject: "Rejeitar",
     noPendingRaces: "Sem provas pendentes",
     noRunners: "Sem atletas",
+    noResults: "Sem resultados",
     requestAt: "Pedido em",
     newPassword: "Nova password",
     setPassword: "Definir password",
@@ -257,6 +264,8 @@ const text = {
     athleteManagement: "Gestão de atleta",
     personalData: "Dados pessoais",
     editProfile: "Editar perfil",
+    closeEdit: "Fechar edição",
+    leaguePlace: "Lugar na liga",
     saveData: "Guardar dados",
     submittedRacesTitle: "Provas submetidas",
     noProfileLoaded: "Perfil ainda não carregado.",
@@ -272,7 +281,8 @@ const text = {
     photoTooLarge: "A imagem é demasiado grande. Usa uma foto com menos de 900 KB.",
     invalidPhoto: "Escolhe um ficheiro de imagem válido.",
     newsletterSent: "Newsletter enviada.",
-    mbwayCopied: "Número MB WAY copiado.",
+    mbwayCopied: "Número MB WAY copiado. Abre a app e envia 2€.",
+    mbwayOpen: "Abrir MB WAY",
     sent: "Enviada",
     received: "Recebida",
     system: "Sistema",
@@ -284,6 +294,7 @@ const text = {
     deleteRunner: "Eliminar",
     deleteRunnerConfirm: (runnerName) =>
       `Eliminar "${runnerName}"? Isto apaga o atleta, acesso, mensagens e provas submetidas.`,
+    runnerDeleted: "Atleta eliminado.",
     generalPointsRanking: "Ranking geral por pontos",
     myRaces: "As minhas provas",
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
@@ -338,6 +349,7 @@ const text = {
     reject: "Reject",
     noPendingRaces: "No pending races",
     noRunners: "No athletes",
+    noResults: "No results",
     requestAt: "Requested at",
     newPassword: "New password",
     setPassword: "Set password",
@@ -355,6 +367,8 @@ const text = {
     athleteManagement: "Athlete management",
     personalData: "Personal data",
     editProfile: "Edit profile",
+    closeEdit: "Close edit",
+    leaguePlace: "League place",
     saveData: "Save data",
     submittedRacesTitle: "Submitted races",
     noProfileLoaded: "Profile not loaded yet.",
@@ -370,7 +384,8 @@ const text = {
     photoTooLarge: "The image is too large. Use a photo under 900 KB.",
     invalidPhoto: "Choose a valid image file.",
     newsletterSent: "Newsletter sent.",
-    mbwayCopied: "MB WAY number copied.",
+    mbwayCopied: "MB WAY number copied. Open the app and send 2€.",
+    mbwayOpen: "Open MB WAY",
     sent: "Sent",
     received: "Received",
     system: "System",
@@ -382,6 +397,7 @@ const text = {
     deleteRunner: "Delete",
     deleteRunnerConfirm: (runnerName) =>
       `Delete "${runnerName}"? This removes the athlete, access, messages and submitted races.`,
+    runnerDeleted: "Athlete deleted.",
     generalPointsRanking: "Overall points ranking",
     myRaces: "My races",
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
@@ -407,10 +423,12 @@ const staticText = {
   "Gestão de atleta": "Athlete management",
   "Dados pessoais": "Personal data",
   "Editar perfil": "Edit profile",
+  "Fechar edição": "Close edit",
   "Guardar dados": "Save data",
   "Provas submetidas": "Submitted races",
   "Mensagens": "Messages",
   "Chat da liga": "League chat",
+  "Auto": "Auto",
   "Noite": "Night",
   "Dia": "Day",
   "Caixa de entrada": "Inbox",
@@ -454,6 +472,10 @@ const staticText = {
   "Partilha social": "Social sharing",
   "Mostre cada resultado e lugar relativo na liga.": "Show each result and relative league position.",
   "Criar atleta": "Create athlete",
+  "Gestão de inscritos": "Registered athlete management",
+  "Pesquisa, confirma dados públicos e remove atletas quando necessário.": "Search, check public data and remove athletes when needed.",
+  "Pesquisar atleta": "Search athlete",
+  "Nome, cidade, clube ou email": "Name, city, club or email",
   "Inscrever atleta": "Register athlete",
   "Nome": "Name",
   "Email": "Email",
@@ -732,7 +754,9 @@ function setLanguage(nextLanguage) {
 }
 
 function applyTheme() {
-  document.body.dataset.theme = theme;
+  const resolvedTheme = theme === "auto" && systemTheme?.matches ? "light" : theme === "auto" ? "dark" : theme;
+  document.body.dataset.theme = resolvedTheme;
+  document.body.dataset.themeMode = theme;
   themeButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.theme === theme);
   });
@@ -743,6 +767,10 @@ function setTheme(nextTheme) {
   localStorage.setItem("runners-league-theme", theme);
   applyTheme();
 }
+
+systemTheme?.addEventListener("change", () => {
+  if (theme === "auto") applyTheme();
+});
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -1277,9 +1305,12 @@ function renderProfileManagement() {
   const runnerName = profile?.name || session.name;
   const races = visibleSubmissions().map(calculateRace).sort((a, b) => b.id - a.id);
   const approved = races.filter((race) => race.validationStatus === "approved").length;
+  const leaguePlace = leaguePositionForRunner(runnerName);
   const profileMeta = profile
     ? [profile.city, profile.country, profile.club].filter(Boolean).join(" · ")
     : "";
+
+  profileForm.classList.toggle("hidden", !profileEditOpen);
 
   profileManagementSummary.innerHTML = profile
     ? `
@@ -1291,13 +1322,18 @@ function renderProfileManagement() {
           <p>${escapeHtml(profileMeta || profile.bio || t("noBio"))}</p>
           ${profile.bio && profileMeta ? `<p>${escapeHtml(profile.bio)}</p>` : ""}
         </div>
-        <span class="profile-visibility">${profile.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+        <div class="profile-card-actions">
+          <span class="profile-visibility">${profile.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+          <button class="secondary-action compact-action" type="button" data-edit-profile>
+            ${t("editProfile")}
+          </button>
+        </div>
       </div>
       <div class="profile-stats">
+        <div><span>${t("leaguePlace")}</span><strong>${leaguePlace ? `#${leaguePlace}` : "-"}</strong></div>
         <div><span>${t("submittedRacesTitle")}</span><strong>${races.length}</strong></div>
         <div><span>${t("approvedShort")}</span><strong>${approved}</strong></div>
         <div><span>${t("eligibility")}</span><strong>${approved >= 3 ? t("eligible") : t("pendingShort")}</strong></div>
-        <div><span>${t("seasonRanking")}</span><strong>${selectedSeason}</strong></div>
       </div>
     `
     : `<article class="submission-item empty-state"><strong>${t("noProfileLoaded")}</strong></article>`;
@@ -1397,6 +1433,29 @@ function shareTextForRace(race) {
   const position = leaguePositionForRunner(race.runner);
   const place = position ? `#${position}` : "-";
   return `Runners League: ${race.runner} somou ${race.total} pts em ${race.raceName} (${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km) e está em ${place} na liga. https://rljc.pythonanywhere.com`;
+}
+
+async function copyText(textToCopy) {
+  try {
+    await navigator.clipboard?.writeText(textToCopy);
+    return true;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = textToCopy;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.append(textarea);
+    textarea.select();
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch {
+      copied = false;
+    }
+    textarea.remove();
+    return copied;
+  }
 }
 
 function renderSeasonFilter() {
@@ -1536,8 +1595,20 @@ function renderPasswordRunnerOptions(profiles) {
 
 function renderRunnerAccounts(runners = runnerAccountRows) {
   runnerAccountRows = runners;
-  runnerAccounts.innerHTML = runners.length
-    ? runners
+  const query = runnerAccountSearch?.value.trim().toLowerCase() || "";
+  const filtered = runners.filter((runner) => {
+    if (!query) return true;
+    return [runner.name, runner.email, runner.city, runner.country, runner.club]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  });
+  if (runnerAccountsCount) {
+    runnerAccountsCount.textContent = `${filtered.length}/${runners.length} ${t("athletes")}`;
+  }
+  runnerAccounts.innerHTML = filtered.length
+    ? filtered
         .map(
           (runner) => `
             <article class="runner-account runner-account-card">
@@ -1546,17 +1617,17 @@ function renderRunnerAccounts(runners = runnerAccountRows) {
               </div>
               <div class="runner-account-details">
                 <strong>${escapeHtml(runner.name)}</strong>
-                <span>${[runner.city, runner.country, runner.club].filter(Boolean).map(escapeHtml).join(" · ") || t("noBio")}</span>
-                <span>${runner.submissions} ${runner.submissions === 1 ? t("race") : t("races")} · ${runner.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+                <span>${[runner.email, runner.city, runner.country, runner.club].filter(Boolean).map(escapeHtml).join(" · ") || t("noBio")}</span>
+                <span>${runner.submissions} ${runner.submissions === 1 ? t("race") : t("races")} · ${runner.shareProfile ? t("shareProfile") : t("hideProfile")} · ${escapeHtml(formatDateTime(runner.createdAt))}</span>
               </div>
-              <button class="danger-action compact-action runner-delete-action" type="button" data-delete-runner="${escapeHtml(runner.name)}">
+              <button class="danger-action compact-action runner-delete-action" type="button" data-delete-runner-id="${runner.id}" data-delete-runner-name="${escapeHtml(runner.name)}">
                 ${t("deleteRunner")}
               </button>
             </article>
           `
         )
         .join("")
-    : `<article class="runner-account"><strong>${t("noRunners")}</strong></article>`;
+    : `<article class="runner-account empty-state"><strong>${query ? t("noResults") : t("noRunners")}</strong></article>`;
 }
 
 function renderPasswordResetRequests(requests = passwordResetRows) {
@@ -1739,6 +1810,23 @@ langButtons.forEach((button) => {
 
 themeButtons.forEach((button) => {
   button.addEventListener("click", () => setTheme(button.dataset.theme));
+});
+
+runnerAccountSearch?.addEventListener("input", () => {
+  renderRunnerAccounts();
+});
+
+profileManagementSummary.addEventListener("click", (event) => {
+  if (!event.target.closest("[data-edit-profile]")) return;
+  profileEditOpen = true;
+  renderProfileManagement();
+  profileForm.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+cancelProfileEdit.addEventListener("click", () => {
+  profileEditOpen = false;
+  profileMessage.textContent = "";
+  renderProfileManagement();
 });
 
 showSignupButton.addEventListener("click", () => {
@@ -1939,6 +2027,7 @@ profileForm.addEventListener("submit", async (event) => {
     renderSeasonFilter();
     renderSubmissions();
     renderCurrent();
+    profileEditOpen = false;
     renderProfileManagement();
     renderSession();
     profileMessage.textContent = data.message;
@@ -2014,13 +2103,14 @@ sendNewsletterButton.addEventListener("click", async () => {
 
 mbwayAction.addEventListener("click", async () => {
   const phone = mbwayAction.dataset.mbwayPhone;
-  await navigator.clipboard?.writeText(phone);
+  const appUrl = mbwayAction.dataset.mbwayUrl || "mbway://";
+  copyText(`MB WAY ${phone} · 2€`);
   const original = mbwayAction.innerHTML;
   mbwayAction.innerHTML = `<strong>MB WAY</strong><span>${t("mbwayCopied")}</span>`;
   window.setTimeout(() => {
     mbwayAction.innerHTML = original;
   }, 1800);
-  window.location.href = `tel:${phone}`;
+  window.location.href = appUrl;
 });
 
 profileRaceList.addEventListener("click", async (event) => {
@@ -2033,11 +2123,21 @@ profileRaceList.addEventListener("click", async (event) => {
   if (button.dataset.shareFacebook) {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://rljc.pythonanywhere.com")}&quote=${encodeURIComponent(textToShare)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+    copyText(textToShare);
+    profileMessage.textContent = t("shareCopied");
     return;
   }
   if (button.dataset.shareInstagram) {
-    await navigator.clipboard?.writeText(textToShare);
-    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = "instagram://app";
+      window.setTimeout(() => {
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      }, 500);
+    } else {
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+    }
+    copyText(textToShare);
     profileMessage.textContent = t("instagramCopied");
     return;
   }
@@ -2045,7 +2145,7 @@ profileRaceList.addEventListener("click", async (event) => {
     await navigator.share({ title: "Runners League", text: textToShare }).catch(() => {});
     return;
   }
-  await navigator.clipboard?.writeText(textToShare);
+  await copyText(textToShare);
   profileMessage.textContent = t("shareCopied");
 });
 
@@ -2115,22 +2215,31 @@ createRunnerForm.addEventListener("submit", async (event) => {
 });
 
 runnerAccounts.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-delete-runner]");
+  const button = event.target.closest("[data-delete-runner-id]");
   if (!button) return;
-  const name = button.dataset.deleteRunner;
+  const id = button.dataset.deleteRunnerId;
+  const name = button.dataset.deleteRunnerName;
   if (!window.confirm(t("deleteRunnerConfirm", name))) return;
-  const data = await apiRequest("/api/runners/delete", {
-    method: "POST",
-    body: JSON.stringify({ name }),
-  });
-  submissions = data.submissions;
-  renderSeasonFilter();
-  renderProfiles(data.profiles, data.runnerProfiles);
-  renderRunnerAccounts(data.runners);
-  renderPendingValidations();
-  renderEditSubmissionOptions();
-  renderAdminStats();
-  loadMessages();
+  runnerAccountsStatus.textContent = "";
+  button.disabled = true;
+  try {
+    const data = await apiRequest("/api/runners/delete", {
+      method: "POST",
+      body: JSON.stringify({ id }),
+    });
+    submissions = data.submissions;
+    renderSeasonFilter();
+    renderProfiles(data.profiles, data.runnerProfiles);
+    renderRunnerAccounts(data.runners);
+    renderPendingValidations();
+    renderEditSubmissionOptions();
+    renderAdminStats();
+    loadMessages();
+    runnerAccountsStatus.textContent = data.message || t("runnerDeleted");
+  } catch (error) {
+    runnerAccountsStatus.textContent = error.message;
+    button.disabled = false;
+  }
 });
 
 passwordForm.addEventListener("submit", async (event) => {

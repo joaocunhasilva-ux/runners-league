@@ -16,7 +16,8 @@
         </div>
 
         <div class="theme-switch" aria-label="Tema">
-          <button class="theme-button active" type="button" data-theme="dark">Noite</button>
+          <button class="theme-button active" type="button" data-theme="auto">Auto</button>
+          <button class="theme-button" type="button" data-theme="dark">Noite</button>
           <button class="theme-button" type="button" data-theme="light">Dia</button>
         </div>
       </div>
@@ -174,7 +175,32 @@
             </div>
 
             <div class="admin-grid">
-            <form id="create-runner-form" class="admin-form admin-form-wide">
+            <section class="admin-form admin-form-medium admin-form-priority">
+              <h2>Provas pendentes</h2>
+              <label>
+                Pesquisar
+                <input id="validation-search" type="search" placeholder="Atleta ou prova" />
+              </label>
+              <div id="pending-validations" class="validation-list"></div>
+            </section>
+
+            <section class="admin-form admin-form-medium runner-management-panel">
+              <div class="admin-section-title">
+                <div>
+                  <h2>Gestão de inscritos</h2>
+                  <p class="form-note">Pesquisa, confirma dados públicos e remove atletas quando necessário.</p>
+                </div>
+                <span id="runner-accounts-count">0 atletas</span>
+              </div>
+              <label>
+                Pesquisar atleta
+                <input id="runner-account-search" type="search" placeholder="Nome, cidade, clube ou email" />
+              </label>
+              <div id="runner-accounts" class="runner-account-list"></div>
+              <p id="runner-accounts-status" class="form-note" role="status"></p>
+            </section>
+
+            <form id="create-runner-form" class="admin-form admin-form-medium">
               <h2>Inscrever atleta</h2>
               <label>
                 Nome
@@ -270,11 +296,6 @@
             </section>
 
             <section class="admin-form admin-form-medium">
-              <h2>Atletas registados</h2>
-              <div id="runner-accounts" class="runner-account-list"></div>
-            </section>
-
-            <section class="admin-form admin-form-medium">
               <h2>Chat da liga</h2>
               <div class="admin-section-note">
                 <span id="admin-message-badge" class="notification-badge hidden">0</span>
@@ -300,15 +321,6 @@
                 <p id="admin-message-status" class="form-note" role="status"></p>
               </form>
               <div id="admin-message-list" class="message-list"></div>
-            </section>
-
-            <section class="admin-form admin-form-medium admin-form-priority">
-              <h2>Provas pendentes</h2>
-              <label>
-                Pesquisar
-                <input id="validation-search" type="search" placeholder="Atleta ou prova" />
-              </label>
-              <div id="pending-validations" class="validation-list"></div>
             </section>
 
             <section class="admin-form admin-form-medium">
@@ -629,7 +641,7 @@
 
           <section id="profile-management-summary" class="athlete-profile"></section>
 
-          <form id="profile-form" class="profile-management-form">
+          <form id="profile-form" class="profile-management-form hidden">
             <div class="section-title">
               <h2>Dados pessoais</h2>
               <span>Editar perfil</span>
@@ -684,6 +696,9 @@
             <button class="primary-action compact-action" type="submit">
               <span aria-hidden="true">✓</span>
               Guardar dados
+            </button>
+            <button id="cancel-profile-edit" class="secondary-action compact-action" type="button">
+              Fechar edição
             </button>
             <p id="profile-message" class="form-note" role="status"></p>
           </form>
@@ -860,9 +875,9 @@
                   <strong>2€</strong>
                   Pagar por PayPal
                 </a>
-                <button id="mbway-action" class="support-action" type="button" data-mbway-phone="919681661">
+                <button id="mbway-action" class="support-action" type="button" data-mbway-phone="919681661" data-mbway-url="mbway://">
                   <strong>MB WAY</strong>
-                  <span>919 681 661</span>
+                  <span>919 681 661 · 2€</span>
                 </button>
               </div>
             </article>

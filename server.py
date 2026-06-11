@@ -977,14 +977,19 @@ def create_runner_account(payload, user):
 def delete_runner_account(payload, user):
     if user["role"] != "general":
         raise PermissionError("Só o acesso geral pode eliminar atletas")
+    runner_id = payload.get("id")
     name = payload.get("name", "").strip()
-    if not name:
+    if not runner_id and not name:
         raise ValueError("Atleta não encontrado")
 
     with connect() as connection:
-        runner = connection.execute("SELECT id FROM runners WHERE name = ?", (name,)).fetchone()
+        if runner_id:
+            runner = connection.execute("SELECT id, name FROM runners WHERE id = ?", (runner_id,)).fetchone()
+        else:
+            runner = connection.execute("SELECT id, name FROM runners WHERE name = ?", (name,)).fetchone()
         if runner is None:
             raise ValueError("Atleta não encontrado")
+        name = runner["name"]
         user_rows = connection.execute(
             "SELECT id FROM users WHERE runner_id = ? OR (name = ? AND role = 'runner')",
             (runner["id"], name),
