@@ -495,17 +495,54 @@
         </aside>
 
         <section id="league-page" class="league-view app-page active" aria-live="polite">
-          <div class="top-bar">
-            <div>
+          <section class="league-hero">
+            <div class="hero-content">
               <p id="view-eyebrow" class="eyebrow">Ranking público</p>
-              <h2 id="view-title">Ranking por pontos</h2>
+              <span id="view-title" class="hero-subtitle">Ranking por pontos</span>
+              <h2>Runners League</h2>
+              <h3>Corra. Supere. Pertença.</h3>
+              <p>A Runners League transforma provas oficiais numa liga simples, competitiva e motivadora para corredores reais.</p>
+              <div class="hero-actions">
+                <button id="hero-start" class="primary-action" type="button">
+                  <span aria-hidden="true">→</span>
+                  Entrar na liga
+                </button>
+                <button class="secondary-action hero-secondary" type="button" data-view="rules">
+                  Como funciona
+                </button>
+              </div>
             </div>
-            <label class="season-control">
-              Época
-              <select id="season-filter"></select>
-            </label>
-            <button id="reset" class="icon-button" type="button" title="Limpar submissões" aria-label="Limpar submissões">↺</button>
-          </div>
+            <div class="hero-control">
+              <label class="season-control">
+                Época
+                <select id="season-filter"></select>
+              </label>
+              <button id="reset" class="icon-button" type="button" title="Limpar submissões" aria-label="Limpar submissões">↺</button>
+            </div>
+          </section>
+
+          <section class="feature-strip" aria-label="Destaques da liga">
+            <article>
+              <span aria-hidden="true">01</span>
+              <strong>Submeta provas</strong>
+              <p>Registe resultados oficiais e acompanhe a evolução.</p>
+            </article>
+            <article>
+              <span aria-hidden="true">02</span>
+              <strong>Ranking justo</strong>
+              <p>Compare distâncias, ritmos, terreno e classificação.</p>
+            </article>
+            <article>
+              <span aria-hidden="true">03</span>
+              <strong>Validação oficial</strong>
+              <p>O admin aprova provas e comunica com atletas.</p>
+            </article>
+            <article>
+              <span aria-hidden="true">04</span>
+              <strong>Partilha social</strong>
+              <p>Mostre cada resultado e lugar relativo na liga.</p>
+            </article>
+          </section>
 
           <section class="score-band">
             <canvas id="route-canvas" width="900" height="320" aria-label="Visualização da prova"></canvas>

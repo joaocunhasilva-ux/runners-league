@@ -14,6 +14,7 @@ const loginButton = document.querySelector("#login-button");
 const passwordResetRequestButton = document.querySelector("#password-reset-request");
 const showSignupButton = document.querySelector("#show-signup");
 const cancelSignupButton = document.querySelector("#cancel-signup");
+const heroStartButton = document.querySelector("#hero-start");
 const loginMessage = document.querySelector("#login-message");
 const signupMessage = document.querySelector("#signup-message");
 const logoutButton = document.querySelector("#logout");
@@ -408,6 +409,21 @@ const staticText = {
   "Gestão da liga": "League management",
   "Painel geral": "General dashboard",
   "Validações, atletas e mensagens num só lugar.": "Validations, athletes and messages in one place.",
+  "Runners League": "Runners League",
+  "Corra. Supere. Pertença.": "Run. Rise. Belong.",
+  "A Runners League transforma provas oficiais numa liga simples, competitiva e motivadora para corredores reais.":
+    "Runners League turns official race results into a simple, competitive and motivating league for real runners.",
+  "Entrar na liga": "Enter the league",
+  "Como funciona": "How it works",
+  "Destaques da liga": "League highlights",
+  "Submeta provas": "Submit races",
+  "Registe resultados oficiais e acompanhe a evolução.": "Log official results and track your progress.",
+  "Ranking justo": "Fair ranking",
+  "Compare distâncias, ritmos, terreno e classificação.": "Compare distances, paces, terrain and ranking.",
+  "Validação oficial": "Official validation",
+  "O admin aprova provas e comunica com atletas.": "Admin approves races and communicates with athletes.",
+  "Partilha social": "Social sharing",
+  "Mostre cada resultado e lugar relativo na liga.": "Show each result and relative league position.",
   "Criar atleta": "Create athlete",
   "Inscrever atleta": "Register athlete",
   "Nome": "Name",
@@ -527,6 +543,7 @@ const staticAttributes = {
   "Sessão e submissão": "Session and submission",
   "Navegação principal": "Main navigation",
   "Idioma": "Language",
+  "Destaques da liga": "League highlights",
   "Sair": "Logout",
   "Atleta ou prova": "Athlete or race",
   "Limpar submissões": "Clear submissions",
@@ -1637,6 +1654,22 @@ showSignupButton.addEventListener("click", () => {
 cancelSignupButton.addEventListener("click", () => {
   signupOpen = false;
   signupMessage.textContent = "";
+  renderSession();
+});
+
+heroStartButton.addEventListener("click", () => {
+  if (session?.type === "runner") {
+    showView("profile");
+    loadCurrentRunnerProfile();
+    return;
+  }
+  if (session?.type === "general") {
+    showView("league");
+    return;
+  }
+  signupOpen = true;
+  loginMessage.textContent = "";
+  showView("league");
   renderSession();
 });
 
