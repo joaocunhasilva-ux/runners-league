@@ -289,6 +289,7 @@ const text = {
     shareRace: "Partilhar",
     shareInstagram: "Instagram",
     shareFacebook: "Facebook",
+    shareX: "X",
     instagramCopied: "Legenda copiada. Cola-a no Instagram.",
     shareCopied: "Texto de partilha copiado.",
     deleteRunner: "Eliminar",
@@ -392,6 +393,7 @@ const text = {
     shareRace: "Share",
     shareInstagram: "Instagram",
     shareFacebook: "Facebook",
+    shareX: "X",
     instagramCopied: "Caption copied. Paste it on Instagram.",
     shareCopied: "Share text copied.",
     deleteRunner: "Delete",
@@ -1109,6 +1111,28 @@ function renderRunnerAvatar(profile, name) {
   return `<span>${escapeHtml(runnerInitials(name))}</span>`;
 }
 
+function renderSocialShareActions(kind, value) {
+  const safeValue = escapeHtml(String(value));
+  const networks = [
+    ["facebook", "f", t("shareFacebook")],
+    ["x", "X", t("shareX")],
+    ["instagram", "◎", t("shareInstagram")],
+  ];
+  return `
+    <div class="social-share-actions" aria-label="Partilha social">
+      ${networks
+        .map(
+          ([network, icon, label]) => `
+            <button class="social-share-button ${network}" type="button" data-social-share="${network}" data-share-kind="${kind}" data-share-value="${safeValue}" aria-label="${label}" title="${label}">
+              ${icon}
+            </button>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
 function renderRegisteredAthletes() {
   if (!registeredAthletes) return;
   const rows = runnerProfileRows.length
@@ -1147,11 +1171,14 @@ function renderTopThree(rows) {
             .map((row, index) => {
               const placeClass = index === 0 ? "gold" : index === 1 ? "silver" : "bronze";
               return `
-                <button type="button" class="podium-card ${placeClass}" data-athlete="${escapeHtml(row.runner)}">
+                <article class="podium-card ${placeClass}" data-athlete="${escapeHtml(row.runner)}" role="button" tabindex="0">
                   <span>#${index + 1}</span>
                   <strong>${escapeHtml(row.runner)}</strong>
-                  <em>${Math.round(row.score)} ${t("pts")}</em>
-                </button>
+                  <div class="ranking-share-line">
+                    <em>${Math.round(row.score)} ${t("pts")}</em>
+                    ${renderSocialShareActions("ranking", row.runner)}
+                  </div>
+                </article>
               `;
             })
             .join("")}
@@ -1160,11 +1187,14 @@ function renderTopThree(rows) {
           ${topTen
             .map(
               (row, index) => `
-                <button type="button" class="top-ten-row" data-athlete="${escapeHtml(row.runner)}">
+                <article class="top-ten-row" data-athlete="${escapeHtml(row.runner)}" role="button" tabindex="0">
                   <span>#${index + 4}</span>
                   <strong>${escapeHtml(row.runner)}</strong>
-                  <em>${Math.round(row.score)} ${t("pts")}</em>
-                </button>
+                  <div class="ranking-share-line">
+                    <em>${Math.round(row.score)} ${t("pts")}</em>
+                    ${renderSocialShareActions("ranking", row.runner)}
+                  </div>
+                </article>
               `
             )
             .join("")}
@@ -1259,14 +1289,17 @@ function renderRanking() {
     ? rows
         .map(
           (row, index) => `
-            <button class="submission-item ranking-button" type="button" data-athlete="${escapeHtml(row.runner)}">
+            <article class="submission-item ranking-button" data-athlete="${escapeHtml(row.runner)}" role="button" tabindex="0">
               <div class="submission-title">
                 <strong>${index + 1}. ${escapeHtml(row.runner)}</strong>
                 <span>${row.countingRaces}/6 ${t("countingRaces").toLowerCase()} · ${row.totalRaces} ${row.totalRaces === 1 ? t("submittedRace") : t("submittedRaces")}</span>
                 <span class="submission-meta">${row.eligible ? t("eligible") : t("notEligible")} · ${row.validatedCount}/3 ${t("approvedRaces")} · ${t("average")} ${Math.round(row.average)} ${t("pts")}</span>
               </div>
-              <div class="submission-score">${Math.round(row.score)}</div>
-            </button>
+              <div class="submission-actions">
+                <div class="submission-score">${Math.round(row.score)}</div>
+                ${renderSocialShareActions("ranking", row.runner)}
+              </div>
+            </article>
           `
         )
         .join("")
@@ -1291,7 +1324,10 @@ function renderRaceHistory() {
                 <span>${escapeHtml(item.raceName)} · ${item.distanceKm.toFixed(item.distanceKm % 1 ? 1 : 0)} km · ${formatPace(item.paceSeconds)}</span>
                 <span class="submission-meta">${item.safeRank}/${item.finishers} ${t("classified")} · ${Math.round(item.elevation)} m D+ · ${validationLabel(item)}</span>
               </div>
-              <div class="submission-score">${item.total}</div>
+              <div class="submission-actions">
+                <div class="submission-score">${item.total}</div>
+                ${renderSocialShareActions("race", item.id)}
+              </div>
             </article>
           `
         )
@@ -1364,11 +1400,7 @@ function renderProfileManagement() {
               </div>
               <div class="submission-actions">
                 <div class="submission-score">${race.total}</div>
-                <div class="share-actions">
-                  <button class="share-action" type="button" data-share-race="${race.id}">${t("shareRace")}</button>
-                  <button class="share-action" type="button" data-share-instagram="${race.id}">${t("shareInstagram")}</button>
-                  <button class="share-action" type="button" data-share-facebook="${race.id}">${t("shareFacebook")}</button>
-                </div>
+                ${renderSocialShareActions("race", race.id)}
               </div>
             </article>
           `
@@ -1433,6 +1465,44 @@ function shareTextForRace(race) {
   const position = leaguePositionForRunner(race.runner);
   const place = position ? `#${position}` : "-";
   return `Runners League: ${race.runner} somou ${race.total} pts em ${race.raceName} (${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km) e está em ${place} na liga. https://rljc.pythonanywhere.com`;
+}
+
+function shareTextForRanking(runner) {
+  const row = rankingRows().find((item) => item.runner === runner);
+  const position = leaguePositionForRunner(runner);
+  const place = position ? `#${position}` : "-";
+  const score = row ? `${Math.round(row.score)} pts` : "sem pontuação";
+  return `Runners League: ${runner} está em ${place} na liga com ${score}. https://rljc.pythonanywhere.com`;
+}
+
+function openSocialShare(network, textToShare) {
+  const encodedText = encodeURIComponent(textToShare);
+  const encodedUrl = encodeURIComponent("https://rljc.pythonanywhere.com");
+  if (network === "facebook") {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`, "_blank", "noopener,noreferrer");
+    copyText(textToShare);
+    return t("shareCopied");
+  }
+  if (network === "x") {
+    window.open(`https://twitter.com/intent/tweet?text=${encodedText}`, "_blank", "noopener,noreferrer");
+    copyText(textToShare);
+    return t("shareCopied");
+  }
+  if (network === "instagram") {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = "instagram://app";
+      window.setTimeout(() => {
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      }, 500);
+    } else {
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+    }
+    copyText(textToShare);
+    return t("instagramCopied");
+  }
+  copyText(textToShare);
+  return t("shareCopied");
 }
 
 async function copyText(textToCopy) {
@@ -2113,40 +2183,18 @@ mbwayAction.addEventListener("click", async () => {
   window.location.href = appUrl;
 });
 
-profileRaceList.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-share-race], [data-share-instagram], [data-share-facebook]");
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-social-share]");
   if (!button) return;
-  const raceId = button.dataset.shareRace || button.dataset.shareInstagram || button.dataset.shareFacebook;
-  const race = visibleSubmissions().map(calculateRace).find((item) => String(item.id) === String(raceId));
-  if (!race) return;
-  const textToShare = shareTextForRace(race);
-  if (button.dataset.shareFacebook) {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://rljc.pythonanywhere.com")}&quote=${encodeURIComponent(textToShare)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    copyText(textToShare);
-    profileMessage.textContent = t("shareCopied");
-    return;
-  }
-  if (button.dataset.shareInstagram) {
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = "instagram://app";
-      window.setTimeout(() => {
-        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      }, 500);
-    } else {
-      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-    }
-    copyText(textToShare);
-    profileMessage.textContent = t("instagramCopied");
-    return;
-  }
-  if (navigator.share) {
-    await navigator.share({ title: "Runners League", text: textToShare }).catch(() => {});
-    return;
-  }
-  await copyText(textToShare);
-  profileMessage.textContent = t("shareCopied");
+  event.preventDefault();
+  event.stopPropagation();
+  const kind = button.dataset.shareKind;
+  const value = button.dataset.shareValue;
+  const race = kind === "race" ? visibleSubmissions().map(calculateRace).find((item) => String(item.id) === String(value)) : null;
+  const textToShare = kind === "ranking" ? shareTextForRanking(value) : race ? shareTextForRace(race) : "";
+  if (!textToShare) return;
+  const message = openSocialShare(button.dataset.socialShare, textToShare);
+  if (profileMessage) profileMessage.textContent = message;
 });
 
 resetButton.addEventListener("click", async () => {

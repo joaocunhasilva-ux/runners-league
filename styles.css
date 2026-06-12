@@ -1535,6 +1535,63 @@ progress::-moz-progress-bar {
   cursor: pointer;
 }
 
+.ranking-share-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.social-share-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-share-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #7ce8ff;
+  background: rgba(19, 169, 255, 0.12);
+  border: 1px solid rgba(77, 177, 255, 0.26);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 7, 20, 0.16);
+}
+
+.social-share-button.facebook {
+  font-family: Arial, sans-serif;
+  font-size: 1.15rem;
+}
+
+.social-share-button.instagram {
+  font-size: 1.25rem;
+}
+
+.social-share-button:hover,
+.social-share-button:focus-visible {
+  color: #fff;
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+  border-color: rgba(126, 232, 255, 0.5);
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.social-share-button.instagram:hover,
+.social-share-button.instagram:focus-visible {
+  background: linear-gradient(135deg, var(--track), var(--coral));
+}
+
+.social-share-button.x:hover,
+.social-share-button.x:focus-visible {
+  background: linear-gradient(135deg, #061426, var(--track-dark));
+}
+
 .empty-state {
   justify-content: center;
   color: var(--muted);
