@@ -167,6 +167,14 @@ def init_db():
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
         ensure_column(connection, "submissions", "official_url", "TEXT NOT NULL DEFAULT ''")
         ensure_column(connection, "submissions", "validation_status", "TEXT NOT NULL DEFAULT 'pending'")
         ensure_column(connection, "submissions", "season_year", f"INTEGER NOT NULL DEFAULT {CURRENT_YEAR}")
@@ -186,17 +194,6 @@ def init_db():
             """
         )
 
-        for runner in DEFAULT_RUNNERS:
-            connection.execute("INSERT OR IGNORE INTO runners (name) VALUES (?)", (runner,))
-            runner_id = runner_id_for(connection, runner)
-            connection.execute(
-                """
-                INSERT OR IGNORE INTO users (runner_id, name, role, password_hash)
-                VALUES (?, ?, 'runner', ?)
-                """,
-                (runner_id, runner, hash_password(DEFAULT_RUNNER_PASSWORD)),
-            )
-
         connection.execute(
             """
             INSERT OR IGNORE INTO users (runner_id, name, role, password_hash)
@@ -205,11 +202,25 @@ def init_db():
             (hash_password(DEFAULT_ADMIN_PASSWORD),),
         )
 
-        count = connection.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
-        if count == 0:
+        demo_seeded = connection.execute("SELECT value FROM app_settings WHERE key = 'demo_seeded'").fetchone()
+        runner_count = connection.execute("SELECT COUNT(*) FROM runners").fetchone()[0]
+        submission_count = connection.execute("SELECT COUNT(*) FROM submissions").fetchone()[0]
+        if demo_seeded is None and runner_count == 0 and submission_count == 0:
+            for runner in DEFAULT_RUNNERS:
+                connection.execute("INSERT OR IGNORE INTO runners (name) VALUES (?)", (runner,))
+                runner_id = runner_id_for(connection, runner)
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO users (runner_id, name, role, password_hash)
+                    VALUES (?, ?, 'runner', ?)
+                    """,
+                    (runner_id, runner, hash_password(DEFAULT_RUNNER_PASSWORD)),
+                )
             for submission in DEFAULT_SUBMISSIONS:
                 runner_id = runner_id_for(connection, submission["runner"])
                 insert_submission(connection, runner_id, submission)
+        if demo_seeded is None:
+            connection.execute("INSERT INTO app_settings (key, value) VALUES ('demo_seeded', '1')")
 
 
 def runner_id_for(connection, name):

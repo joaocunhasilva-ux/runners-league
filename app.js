@@ -255,6 +255,8 @@ const text = {
     signupTitle: "Inscrição de atleta",
     signupServerNotReady:
       "A página de inscrição já foi atualizada, mas o servidor ainda não foi recarregado. Faz Reload no PythonAnywhere e tenta novamente.",
+    serverRequired:
+      "Esta ação precisa do servidor. Abre a página por http://127.0.0.1:4173/ ou usa a versão PythonAnywhere, não o ficheiro local.",
     publicRanking: "Ranking público",
     pointsRanking: "Ranking por pontos",
     generalAccess: "Acesso geral",
@@ -359,6 +361,8 @@ const text = {
     signupTitle: "Athlete registration",
     signupServerNotReady:
       "The registration page has been updated, but the server has not been reloaded yet. Reload the PythonAnywhere web app and try again.",
+    serverRequired:
+      "This action needs the server. Open the page through http://127.0.0.1:4173/ or use the PythonAnywhere version, not the local file.",
     publicRanking: "Public ranking",
     pointsRanking: "Points ranking",
     generalAccess: "General access",
@@ -1785,10 +1789,18 @@ async function apiRequest(path, options = {}) {
   if (session?.token) {
     headers.Authorization = `Bearer ${session.token}`;
   }
-  const response = await fetch(path, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (window.location.protocol === "file:") {
+      throw new Error(t("serverRequired"));
+    }
+    throw new Error(error.message || t("databaseError"));
+  }
   let data = {};
   try {
     data = await response.json();
@@ -2273,7 +2285,7 @@ runnerAccounts.addEventListener("click", async (event) => {
   try {
     const data = await apiRequest("/api/runners/delete", {
       method: "POST",
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: Number(id) }),
     });
     submissions = data.submissions;
     renderSeasonFilter();
