@@ -1044,6 +1044,26 @@ def delete_submission(payload, user):
     return fetch_submissions()
 
 
+def delete_runner_submission(payload, user):
+    if user["role"] != "runner":
+        raise PermissionError("Só atletas podem apagar as suas provas")
+    submission_id = payload.get("id")
+    with connect() as connection:
+        existing = connection.execute(
+            """
+            SELECT submissions.id
+            FROM submissions
+            JOIN runners ON runners.id = submissions.runner_id
+            WHERE submissions.id = ? AND runners.id = ?
+            """,
+            (submission_id, user["runner_id"]),
+        ).fetchone()
+        if existing is None:
+            raise ValueError("Submissão não encontrada")
+        connection.execute("DELETE FROM submissions WHERE id = ?", (submission_id,))
+    return {"submissions": fetch_submissions(), "message": "Prova apagada."}
+
+
 def create_runner_account(payload, user):
     if user["role"] != "general":
         raise PermissionError("Só o acesso geral pode criar atletas")
@@ -1598,6 +1618,17 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
             try:
                 submissions = delete_submission(self.read_json(), user)
                 self.send_json({"submissions": submissions})
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
+            return
+        if self.path == "/api/submissions/runner-delete":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(delete_runner_submission(self.read_json(), user))
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
             except PermissionError as error:
                 self.send_json({"error": str(error)}, status=403)
             return

@@ -313,6 +313,7 @@ const text = {
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
     databaseError: "Erro na base de dados",
     deleteRaceConfirm: (raceName) => `Apagar "${raceName || "esta prova"}"?`,
+    deleteRace: "Apagar prova",
     submitRace: "Submeter prova",
     editRace: "Editar prova",
     saveRaceCorrection: "Guardar correção",
@@ -425,6 +426,7 @@ const text = {
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
     databaseError: "Database error",
     deleteRaceConfirm: (raceName) => `Delete "${raceName || "this race"}"?`,
+    deleteRace: "Delete race",
     submitRace: "Submit race",
     editRace: "Edit race",
     saveRaceCorrection: "Save correction",
@@ -675,11 +677,13 @@ const serverText = {
   "Só atletas podem editar as suas provas": "Only athletes can edit their own races",
   "Submissão não encontrada": "Submission not found",
   "Só o acesso geral pode apagar provas": "Only general access can delete races",
+  "Só atletas podem apagar as suas provas": "Only athletes can delete their own races",
   "Só o acesso geral pode criar atletas": "Only general access can create athletes",
   "Só o acesso geral pode eliminar atletas": "Only general access can delete athletes",
   "Só o acesso geral pode alterar passwords": "Only general access can change passwords",
   "Atleta não encontrado": "Athlete not found",
   "Atleta eliminado.": "Athlete deleted.",
+  "Prova apagada.": "Race deleted.",
   "Nome do atleta demasiado curto": "Athlete name is too short",
   "A imagem é demasiado grande. Usa uma foto com menos de 900 KB.": "The image is too large. Use a photo under 900 KB.",
   "A imagem do comprovativo é demasiado grande. Usa uma imagem com menos de 900 KB.":
@@ -1509,6 +1513,9 @@ function renderProfileManagement() {
                 <button class="secondary-action compact-action" type="button" data-edit-runner-race="${race.id}">
                   ${t("editRace")}
                 </button>
+                <button class="danger-action compact-action" type="button" data-delete-runner-race="${race.id}">
+                  ${t("deleteRace")}
+                </button>
                 ${renderSocialShareActions("race", race.id)}
               </div>
             </article>
@@ -1617,7 +1624,7 @@ function openSocialShare(network, textToShare) {
 function openProofImage(proofImage) {
   if (!proofImage) return;
   const safeProofImage = escapeHtml(proofImage);
-  const proofWindow = window.open("", "_blank", "noopener,noreferrer");
+  const proofWindow = window.open("", "_blank");
   if (!proofWindow) {
     window.location.href = proofImage;
     return;
@@ -2383,6 +2390,30 @@ profileRaceList.addEventListener("click", (event) => {
   form.classList.remove("hidden");
   form.scrollIntoView({ behavior: "smooth", block: "start" });
   if (profileMessage) profileMessage.textContent = t("editingRaceHelp");
+});
+
+profileRaceList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-delete-runner-race]");
+  if (!button) return;
+  const race = visibleSubmissions().find((item) => String(item.id) === String(button.dataset.deleteRunnerRace));
+  if (!window.confirm(t("deleteRaceConfirm", race?.raceName))) return;
+  const data = await apiRequest("/api/submissions/runner-delete", {
+    method: "POST",
+    body: JSON.stringify({ id: Number(button.dataset.deleteRunnerRace) }),
+  });
+  submissions = data.submissions;
+  if (String(editingRaceId) === String(button.dataset.deleteRunnerRace)) {
+    editingRaceId = null;
+    setRaceFormMode(null);
+  }
+  renderSeasonFilter();
+  renderEditSubmissionOptions();
+  renderSubmissions();
+  renderAdminStats();
+  renderCurrent();
+  renderPendingValidations();
+  renderProfileManagement();
+  if (profileMessage) profileMessage.textContent = data.message || "";
 });
 
 resetButton.addEventListener("click", async () => {
