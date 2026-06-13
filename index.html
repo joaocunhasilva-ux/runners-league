@@ -175,231 +175,274 @@
             </div>
 
             <div class="admin-grid">
-            <section class="admin-form admin-form-medium admin-form-priority">
-              <h2>Provas pendentes</h2>
-              <label>
-                Pesquisar
-                <input id="validation-search" type="search" placeholder="Atleta ou prova" />
-              </label>
-              <div id="pending-validations" class="validation-list"></div>
-            </section>
-
-            <section class="admin-form admin-form-medium runner-management-panel">
-              <div class="admin-section-title">
-                <div>
-                  <h2>Gestão de inscritos</h2>
-                  <p class="form-note">Pesquisa, confirma dados públicos e remove atletas quando necessário.</p>
+              <section class="admin-group admin-group-priority">
+                <div class="admin-group-header">
+                  <span>01</span>
+                  <div>
+                    <p class="eyebrow">Ações urgentes</p>
+                    <h2>Provas por validar</h2>
+                  </div>
                 </div>
-                <span id="runner-accounts-count">0 atletas</span>
-              </div>
-              <label>
-                Pesquisar atleta
-                <input id="runner-account-search" type="search" placeholder="Nome, cidade, clube ou email" />
-              </label>
-              <div id="runner-accounts" class="runner-account-list"></div>
-              <p id="runner-accounts-status" class="form-note" role="status"></p>
-            </section>
+                <section class="admin-form admin-form-priority">
+                  <label>
+                    Pesquisar
+                    <input id="validation-search" type="search" placeholder="Atleta ou prova" />
+                  </label>
+                  <div id="pending-validations" class="validation-list"></div>
+                </section>
+              </section>
 
-            <form id="create-runner-form" class="admin-form admin-form-medium">
-              <h2>Inscrever atleta</h2>
-              <label>
-                Nome
-                <input id="new-runner-name" type="text" autocomplete="name" />
-              </label>
-              <label>
-                Email
-                <input id="new-runner-email" type="email" autocomplete="email" />
-              </label>
-              <label>
-                URL da foto ou ficheiro
-                <input id="new-runner-photo" type="text" placeholder="https://..." />
-              </label>
-              <label>
-                Escolher foto
-                <input id="new-runner-photo-file" type="file" accept="image/*" />
-              </label>
-              <div id="new-runner-photo-preview" class="photo-preview" aria-live="polite"></div>
-              <div class="form-grid">
-                <label>
-                  Cidade
-                  <input id="new-runner-city" type="text" autocomplete="address-level2" />
-                </label>
-                <label>
-                  País
-                  <input id="new-runner-country" type="text" autocomplete="country-name" />
-                </label>
-              </div>
-              <div class="form-grid">
-                <label>
-                  Clube
-                  <input id="new-runner-club" type="text" />
-                </label>
-                <label>
-                  Ano de nascimento
-                  <input id="new-runner-birth-year" type="number" min="1900" max="2026" />
-                </label>
-              </div>
-              <label>
-                Bio curta
-                <textarea id="new-runner-bio" rows="3" maxlength="240"></textarea>
-              </label>
-              <label class="toggle-line">
-                <input id="new-runner-share-profile" type="checkbox" checked />
-                Mostrar perfil na página de entrada
-              </label>
-              <label>
-                Password inicial
-                <input id="new-runner-password" type="password" autocomplete="new-password" />
-              </label>
-              <button class="primary-action compact-action" type="submit">
-                <span aria-hidden="true">+</span>
-                Inscrever atleta
-              </button>
-            </form>
+              <section class="admin-group admin-group-athletes">
+                <div class="admin-group-header">
+                  <span>02</span>
+                  <div>
+                    <p class="eyebrow">Atletas</p>
+                    <h2>Inscritos e acessos</h2>
+                  </div>
+                </div>
+                <div class="admin-split">
+                  <section class="admin-form runner-management-panel">
+                    <div class="admin-section-title">
+                      <div>
+                        <h2>Gestão de inscritos</h2>
+                        <p class="form-note">Pesquisa, confirma dados públicos e remove atletas quando necessário.</p>
+                      </div>
+                      <span id="runner-accounts-count">0 atletas</span>
+                    </div>
+                    <label>
+                      Pesquisar atleta
+                      <input id="runner-account-search" type="search" placeholder="Nome, cidade, clube ou email" />
+                    </label>
+                    <div id="runner-accounts" class="runner-account-list"></div>
+                    <p id="runner-accounts-status" class="form-note" role="status"></p>
+                  </section>
 
-            <form id="password-form" class="admin-form admin-form-small">
-              <h2>Alterar password de atleta</h2>
-              <label>
-                Atleta
-                <select id="password-runner"></select>
-              </label>
-              <label>
-                Nova password
-                <input id="updated-runner-password" type="password" autocomplete="new-password" />
-              </label>
-              <button class="primary-action compact-action" type="submit">
-                <span aria-hidden="true">↻</span>
-                Guardar password
-              </button>
-            </form>
+                  <form id="create-runner-form" class="admin-form">
+                    <h2>Inscrever atleta</h2>
+                    <label>
+                      Nome
+                      <input id="new-runner-name" type="text" autocomplete="name" />
+                    </label>
+                    <label>
+                      Email
+                      <input id="new-runner-email" type="email" autocomplete="email" />
+                    </label>
+                    <label>
+                      URL da foto ou ficheiro
+                      <input id="new-runner-photo" type="text" placeholder="https://..." />
+                    </label>
+                    <label>
+                      Escolher foto
+                      <input id="new-runner-photo-file" type="file" accept="image/*" />
+                    </label>
+                    <div id="new-runner-photo-preview" class="photo-preview" aria-live="polite"></div>
+                    <div class="form-grid">
+                      <label>
+                        Cidade
+                        <input id="new-runner-city" type="text" autocomplete="address-level2" />
+                      </label>
+                      <label>
+                        País
+                        <input id="new-runner-country" type="text" autocomplete="country-name" />
+                      </label>
+                    </div>
+                    <div class="form-grid">
+                      <label>
+                        Clube
+                        <input id="new-runner-club" type="text" />
+                      </label>
+                      <label>
+                        Ano de nascimento
+                        <input id="new-runner-birth-year" type="number" min="1900" max="2026" />
+                      </label>
+                    </div>
+                    <label>
+                      Bio curta
+                      <textarea id="new-runner-bio" rows="3" maxlength="240"></textarea>
+                    </label>
+                    <label class="toggle-line">
+                      <input id="new-runner-share-profile" type="checkbox" checked />
+                      Mostrar perfil na página de entrada
+                    </label>
+                    <label>
+                      Password inicial
+                      <input id="new-runner-password" type="password" autocomplete="new-password" />
+                    </label>
+                    <button class="primary-action compact-action" type="submit">
+                      <span aria-hidden="true">+</span>
+                      Inscrever atleta
+                    </button>
+                  </form>
+                </div>
+              </section>
 
-            <form id="admin-password-form" class="admin-form admin-form-small">
-              <h2>Password do acesso geral</h2>
-              <label>
-                Password atual
-                <input id="current-admin-password" type="password" autocomplete="current-password" />
-              </label>
-              <label>
-                Nova password
-                <input id="new-admin-password" type="password" autocomplete="new-password" />
-              </label>
-              <button class="primary-action compact-action" type="submit">
-                <span aria-hidden="true">✓</span>
-                Guardar password geral
-              </button>
-              <p id="admin-password-message" class="form-note" role="status"></p>
-            </form>
+              <section class="admin-group admin-group-comms">
+                <div class="admin-group-header">
+                  <span>03</span>
+                  <div>
+                    <p class="eyebrow">Comunicação</p>
+                    <h2>Mensagens e newsletter</h2>
+                  </div>
+                </div>
+                <div class="admin-split">
+                  <section class="admin-form">
+                    <h2>Chat da liga</h2>
+                    <div class="admin-section-note">
+                      <span id="admin-message-badge" class="notification-badge hidden">0</span>
+                      <button id="admin-mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
+                    </div>
+                    <form id="admin-message-form" class="message-form">
+                      <label>
+                        Destinatário
+                        <select id="admin-message-recipient"></select>
+                      </label>
+                      <label>
+                        Assunto
+                        <input id="admin-message-subject" type="text" />
+                      </label>
+                      <label>
+                        Mensagem
+                        <textarea id="admin-message-body" rows="3"></textarea>
+                      </label>
+                      <button class="primary-action compact-action" type="submit">
+                        <span aria-hidden="true">→</span>
+                        Enviar mensagem
+                      </button>
+                      <p id="admin-message-status" class="form-note" role="status"></p>
+                    </form>
+                    <div id="admin-message-list" class="message-list"></div>
+                  </section>
 
-            <section class="admin-form admin-form-small">
-              <h2>Recuperação de passwords</h2>
-              <div id="password-reset-requests" class="reset-request-list"></div>
-            </section>
+                  <section class="admin-form admin-compact-stack">
+                    <div>
+                      <h2>Newsletter mensal</h2>
+                      <p class="form-note">Envia o resumo do mês para a caixa de mensagens dos atletas. Se o email estiver configurado no servidor, envia também por email.</p>
+                    </div>
+                    <button id="send-newsletter" class="primary-action compact-action" type="button">
+                      <span aria-hidden="true">↗</span>
+                      Enviar newsletter do mês
+                    </button>
+                    <p id="newsletter-status" class="form-note" role="status"></p>
+                  </section>
+                </div>
+              </section>
 
-            <section class="admin-form admin-form-medium">
-              <h2>Chat da liga</h2>
-              <div class="admin-section-note">
-                <span id="admin-message-badge" class="notification-badge hidden">0</span>
-                <button id="admin-mark-messages-read" class="secondary-action compact-action" type="button">Marcar como lidas</button>
-              </div>
-              <form id="admin-message-form" class="message-form">
-                <label>
-                  Destinatário
-                  <select id="admin-message-recipient"></select>
-                </label>
-                <label>
-                  Assunto
-                  <input id="admin-message-subject" type="text" />
-                </label>
-                <label>
-                  Mensagem
-                  <textarea id="admin-message-body" rows="3"></textarea>
-                </label>
-                <button class="primary-action compact-action" type="submit">
-                  <span aria-hidden="true">→</span>
-                  Enviar mensagem
-                </button>
-                <p id="admin-message-status" class="form-note" role="status"></p>
-              </form>
-              <div id="admin-message-list" class="message-list"></div>
-            </section>
+              <section class="admin-group admin-group-config">
+                <div class="admin-group-header">
+                  <span>04</span>
+                  <div>
+                    <p class="eyebrow">Configuração</p>
+                    <h2>Provas e passwords</h2>
+                  </div>
+                </div>
+                <div class="admin-split admin-split-three">
+                  <form id="password-form" class="admin-form">
+                    <h2>Alterar password de atleta</h2>
+                    <label>
+                      Atleta
+                      <select id="password-runner"></select>
+                    </label>
+                    <label>
+                      Nova password
+                      <input id="updated-runner-password" type="password" autocomplete="new-password" />
+                    </label>
+                    <button class="primary-action compact-action" type="submit">
+                      <span aria-hidden="true">↻</span>
+                      Guardar password
+                    </button>
+                  </form>
 
-            <section class="admin-form admin-form-medium">
-              <h2>Newsletter mensal</h2>
-              <p class="form-note">Envia o resumo do mês para a caixa de mensagens dos atletas. Se o email estiver configurado no servidor, envia também por email.</p>
-              <button id="send-newsletter" class="primary-action compact-action" type="button">
-                <span aria-hidden="true">↗</span>
-                Enviar newsletter do mês
-              </button>
-              <p id="newsletter-status" class="form-note" role="status"></p>
-            </section>
+                  <form id="admin-password-form" class="admin-form">
+                    <h2>Password do acesso geral</h2>
+                    <label>
+                      Password atual
+                      <input id="current-admin-password" type="password" autocomplete="current-password" />
+                    </label>
+                    <label>
+                      Nova password
+                      <input id="new-admin-password" type="password" autocomplete="new-password" />
+                    </label>
+                    <button class="primary-action compact-action" type="submit">
+                      <span aria-hidden="true">✓</span>
+                      Guardar password geral
+                    </button>
+                    <p id="admin-password-message" class="form-note" role="status"></p>
+                  </form>
 
-            <form id="edit-submission-form" class="admin-form admin-form-wide">
-              <h2>Editar prova</h2>
-              <div class="form-grid">
-                <label>
-                  Pesquisar
-                  <input id="admin-race-search" type="search" placeholder="Atleta ou prova" />
-                </label>
-                <label>
-                  Estado
-                  <select id="admin-status-filter">
-                    <option value="all">Todos</option>
-                    <option value="pending">Pendentes</option>
-                    <option value="approved">Aprovadas</option>
-                    <option value="rejected">Rejeitadas</option>
-                  </select>
-                </label>
-              </div>
-              <label>
-                Prova
-                <select id="edit-submission-select"></select>
-              </label>
-              <label>
-                Nome da prova
-                <input id="edit-race-name" type="text" />
-              </label>
-              <label>
-                Link oficial
-                <input id="edit-official-url" type="url" />
-              </label>
-              <div class="form-grid">
-                <label>
-                  Distância
-                  <input id="edit-distance" type="number" min="1" max="200" step="0.1" />
-                </label>
-                <label>
-                  Tempo total
-                  <input id="edit-total-seconds" type="number" min="1" />
-                </label>
-              </div>
-              <div class="form-grid">
-                <label>
-                  Classificação
-                  <input id="edit-rank" type="number" min="1" />
-                </label>
-                <label>
-                  Finalistas
-                  <input id="edit-finishers" type="number" min="1" />
-                </label>
-              </div>
-              <div class="form-grid">
-                <label>
-                  Altimetria
-                  <input id="edit-elevation" type="number" min="0" />
-                </label>
-                <label>
-                  Época
-                  <input id="edit-season-year" type="number" min="2020" max="2100" />
-                </label>
-              </div>
-              <div class="form-grid">
-                <button class="primary-action compact-action" type="submit">
-                  <span aria-hidden="true">✓</span>
-                  Guardar
-                </button>
-                <button id="delete-submission" class="danger-action" type="button">Apagar</button>
-              </div>
-            </form>
+                  <section class="admin-form">
+                    <h2>Recuperação de passwords</h2>
+                    <div id="password-reset-requests" class="reset-request-list"></div>
+                  </section>
+                </div>
+
+                <form id="edit-submission-form" class="admin-form admin-form-wide">
+                  <h2>Editar prova</h2>
+                  <div class="form-grid">
+                    <label>
+                      Pesquisar
+                      <input id="admin-race-search" type="search" placeholder="Atleta ou prova" />
+                    </label>
+                    <label>
+                      Estado
+                      <select id="admin-status-filter">
+                        <option value="all">Todos</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="approved">Aprovadas</option>
+                        <option value="rejected">Rejeitadas</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>
+                    Prova
+                    <select id="edit-submission-select"></select>
+                  </label>
+                  <label>
+                    Nome da prova
+                    <input id="edit-race-name" type="text" />
+                  </label>
+                  <label>
+                    Link oficial
+                    <input id="edit-official-url" type="url" />
+                  </label>
+                  <div class="form-grid">
+                    <label>
+                      Distância
+                      <input id="edit-distance" type="number" min="1" max="200" step="0.1" />
+                    </label>
+                    <label>
+                      Tempo total
+                      <input id="edit-total-seconds" type="number" min="1" />
+                    </label>
+                  </div>
+                  <div class="form-grid">
+                    <label>
+                      Classificação
+                      <input id="edit-rank" type="number" min="1" />
+                    </label>
+                    <label>
+                      Finalistas
+                      <input id="edit-finishers" type="number" min="1" />
+                    </label>
+                  </div>
+                  <div class="form-grid">
+                    <label>
+                      Altimetria
+                      <input id="edit-elevation" type="number" min="0" />
+                    </label>
+                    <label>
+                      Época
+                      <input id="edit-season-year" type="number" min="2020" max="2100" />
+                    </label>
+                  </div>
+                  <div class="form-grid">
+                    <button class="primary-action compact-action" type="submit">
+                      <span aria-hidden="true">✓</span>
+                      Guardar
+                    </button>
+                    <button id="delete-submission" class="danger-action" type="button">Apagar</button>
+                  </div>
+                </form>
+              </section>
             </div>
           </section>
 
@@ -557,6 +600,39 @@
 
           <section class="score-band">
             <canvas id="route-canvas" class="hidden-canvas" width="900" height="320" aria-label="Visualização da prova"></canvas>
+            <div class="calculation-panel">
+              <div class="score-card">
+                <p class="eyebrow">Pontuação estimada</p>
+                <strong id="score">0</strong>
+                <span id="score-label">pontos</span>
+              </div>
+              <div class="calculation-explainer">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">Cálculo da prova</p>
+                    <h2>Como a pontuação é calculada</h2>
+                  </div>
+                  <span>Atualiza ao preencher a prova</span>
+                </div>
+                <div class="metric-stack">
+                  <div>
+                    <span>Ritmo médio</span>
+                    <strong id="pace">0:00/km</strong>
+                    <p>Mostra a velocidade por quilómetro e ajuda a comparar distâncias diferentes.</p>
+                  </div>
+                  <div>
+                    <span>Resultado relativo</span>
+                    <strong id="percentile">0%</strong>
+                    <p>Indica a percentagem de participantes que ficaram atrás nesta classificação.</p>
+                  </div>
+                  <div>
+                    <span>Multiplicador da prova</span>
+                    <strong id="difficulty">0.00x</strong>
+                    <p>Ajusta a pontuação pela dureza do percurso, terreno e nível competitivo.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="athlete-directory-panel">
               <div class="section-title">
                 <div>
@@ -566,25 +642,6 @@
                 <span>Perfis públicos</span>
               </div>
               <div id="registered-athletes" class="registered-athletes"></div>
-            </div>
-            <div class="score-card">
-              <p class="eyebrow">Pontuação estimada</p>
-              <strong id="score">0</strong>
-              <span id="score-label">pontos</span>
-            </div>
-            <div class="metric-stack">
-              <div>
-                <span>Ritmo</span>
-                <strong id="pace">0:00/km</strong>
-              </div>
-              <div>
-                <span>Percentil</span>
-                <strong id="percentile">0%</strong>
-              </div>
-              <div>
-                <span>Dificuldade</span>
-                <strong id="difficulty">0.00x</strong>
-              </div>
             </div>
           </section>
 

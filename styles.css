@@ -110,10 +110,12 @@ textarea:disabled {
 
 body[data-theme="light"] .submit-panel,
 body[data-theme="light"] .league-view,
+body[data-theme="light"] .admin-group,
 body[data-theme="light"] .admin-form,
 body[data-theme="light"] .profile-management-form,
 body[data-theme="light"] .messages-panel,
 body[data-theme="light"] .message-form,
+body[data-theme="light"] .calculation-panel,
 body[data-theme="light"] .athlete-profile,
 body[data-theme="light"] .rules-grid article,
 body[data-theme="light"] .scoring-table {
@@ -633,9 +635,61 @@ fieldset {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
   align-items: start;
+}
+
+.admin-group {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(8, 35, 70, 0.54), rgba(5, 21, 43, 0.58)),
+    var(--panel);
+  border: 1px solid rgba(77, 177, 255, 0.2);
+  border-radius: 10px;
+}
+
+.admin-group-priority {
+  border-color: rgba(19, 169, 255, 0.34);
+  box-shadow: 0 0 0 1px rgba(19, 169, 255, 0.08);
+}
+
+.admin-group-header {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-group-header > span {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--track);
+  background: rgba(19, 169, 255, 0.08);
+  border: 1px solid rgba(19, 169, 255, 0.38);
+  border-radius: 8px;
+  font-weight: 950;
+}
+
+.admin-group-header h2 {
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.admin-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.admin-split-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .admin-form {
@@ -655,15 +709,15 @@ fieldset {
 }
 
 .admin-form-wide {
-  grid-column: span 8;
+  width: 100%;
 }
 
 .admin-form-medium {
-  grid-column: span 6;
+  width: 100%;
 }
 
 .admin-form-small {
-  grid-column: span 4;
+  width: 100%;
 }
 
 .admin-form h2 {
@@ -701,8 +755,8 @@ fieldset {
   font-weight: 900;
 }
 
-.runner-management-panel {
-  grid-row: span 2;
+.admin-compact-stack {
+  align-content: start;
 }
 
 .profile-management-form {
@@ -1147,7 +1201,8 @@ fieldset {
 .score-band {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
+  gap: 0;
   min-height: 320px;
   overflow: hidden;
   background:
@@ -1290,13 +1345,19 @@ fieldset {
   min-height: 320px;
 }
 
-.score-card,
-.metric-stack {
+.hidden-canvas {
   display: none;
 }
 
-.hidden-canvas {
-  display: none;
+.calculation-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.46fr) minmax(0, 1fr);
+  gap: 14px;
+  min-height: 320px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(19, 169, 255, 0.28), transparent 30%),
+    linear-gradient(135deg, rgba(2, 9, 21, 0.94), rgba(8, 35, 70, 0.84));
 }
 
 .athlete-directory-panel {
@@ -1367,11 +1428,10 @@ button.registered-athlete {
 }
 
 .score-card {
-  position: absolute;
-  top: 22px;
-  left: 22px;
+  position: static;
+  align-self: start;
   padding: 18px;
-  min-width: 178px;
+  min-width: 0;
   color: #fff;
   background: linear-gradient(145deg, rgba(2, 9, 21, 0.96), rgba(8, 117, 209, 0.88));
   border-radius: 8px;
@@ -1393,22 +1453,26 @@ button.registered-athlete {
   font-weight: 800;
 }
 
+.calculation-explainer {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .metric-stack {
   display: grid;
-  align-content: stretch;
-  background: rgba(2, 9, 21, 0.42);
-  border-left: 1px solid var(--line);
+  gap: 10px;
 }
 
 .metric-stack > div {
-  justify-content: space-between;
-  gap: 12px;
-  padding: 22px;
-  border-bottom: 1px solid var(--line);
-}
-
-.metric-stack > div:last-child {
-  border-bottom: 0;
+  display: grid;
+  grid-template-columns: minmax(130px, 0.6fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(77, 177, 255, 0.18);
+  border-radius: 8px;
 }
 
 .metric-stack span,
@@ -1421,7 +1485,16 @@ button.registered-athlete {
 }
 
 .metric-stack strong {
+  justify-self: end;
   font-size: 1.18rem;
+}
+
+.metric-stack p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .breakdown {
@@ -2096,6 +2169,9 @@ body[data-theme="light"] .sponsor-hero {
   }
 
   .admin-grid,
+  .admin-split,
+  .admin-split-three,
+  .score-band,
   .admin-overview,
   .feature-strip {
     grid-template-columns: 1fr;
@@ -2161,6 +2237,11 @@ body[data-theme="light"] .sponsor-hero {
     grid-template-columns: 1fr;
   }
 
+  .calculation-panel {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
   .league-hero {
     min-height: 620px;
     padding: 24px;
@@ -2177,8 +2258,14 @@ body[data-theme="light"] .sponsor-hero {
 
   .metric-stack {
     grid-template-columns: 1fr;
-    border-left: 0;
-    border-top: 1px solid var(--line);
+  }
+
+  .metric-stack > div {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-stack strong {
+    justify-self: start;
   }
 
   .breakdown,
