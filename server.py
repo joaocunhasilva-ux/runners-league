@@ -20,6 +20,7 @@ CURRENT_YEAR = date.today().year
 DEFAULT_RUNNERS = ["João Silva", "Mariana Costa", "Rui Martins"]
 DEFAULT_RUNNER_PASSWORD = os.environ.get("RUNNERS_LEAGUE_DEFAULT_RUNNER_PASSWORD", "runner123")
 DEFAULT_ADMIN_PASSWORD = os.environ.get("RUNNERS_LEAGUE_DEFAULT_ADMIN_PASSWORD", "admin123")
+ADMIN_EMAIL = os.environ.get("RUNNERS_LEAGUE_ADMIN_EMAIL", "joaocunhasilva@gmail.com")
 DEFAULT_SUBMISSIONS = [
     {
         "runner": "Mariana Costa",
@@ -702,9 +703,9 @@ def newsletter_month_label(month_key):
     return f"{month}/{year}"
 
 
-def send_newsletter_email(recipient, subject, body):
+def send_email(recipient_email, subject, body):
     host = os.environ.get("RUNNERS_LEAGUE_SMTP_HOST")
-    if not host or not recipient["email"]:
+    if not host or not recipient_email:
         return False
     port = int(os.environ.get("RUNNERS_LEAGUE_SMTP_PORT", "587"))
     username = os.environ.get("RUNNERS_LEAGUE_SMTP_USER")
@@ -716,7 +717,7 @@ def send_newsletter_email(recipient, subject, body):
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = sender
-    message["To"] = recipient["email"]
+    message["To"] = recipient_email
     message.set_content(body)
 
     with smtplib.SMTP(host, port, timeout=20) as smtp:
@@ -725,6 +726,36 @@ def send_newsletter_email(recipient, subject, body):
             smtp.login(username, password)
         smtp.send_message(message)
     return True
+
+
+def send_newsletter_email(recipient, subject, body):
+    return send_email(recipient["email"], subject, body)
+
+
+def notify_admin_new_registration(payload):
+    name = payload.get("name", "").strip()
+    email = payload.get("email", "").strip() or "Não indicado"
+    city = payload.get("city", "").strip() or "Não indicada"
+    country = payload.get("country", "").strip() or "Não indicado"
+    club = payload.get("club", "").strip() or "Não indicado"
+    share_profile = "Sim" if payload.get("shareProfile", True) else "Não"
+    subject = f"Runners League · Nova inscrição: {name}"
+    body = "\n".join(
+        [
+            "Nova inscrição na Runners League.",
+            "",
+            f"Nome: {name}",
+            f"Email: {email}",
+            f"Cidade: {city}",
+            f"País: {country}",
+            f"Clube: {club}",
+            f"Perfil público: {share_profile}",
+            "",
+            "Entra no painel geral para validar dados, acompanhar mensagens e gerir o atleta.",
+            "https://rljc.pythonanywhere.com",
+        ]
+    )
+    return send_email(ADMIN_EMAIL, subject, body)
 
 
 def generate_monthly_newsletter(user=None, month_key=None):
@@ -1091,6 +1122,10 @@ def register_runner_account(payload):
             """,
             (runner_id, name, hash_password(password)),
         )
+    try:
+        notify_admin_new_registration(payload)
+    except Exception:
+        pass
     return {"profiles": fetch_profiles(), "runnerProfiles": fetch_runner_profiles(), "message": "Inscrição criada. Já podes entrar como atleta."}
 
 
