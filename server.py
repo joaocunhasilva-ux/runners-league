@@ -964,6 +964,77 @@ def update_submission(payload, user):
     return fetch_submissions()
 
 
+def update_runner_submission(payload, user):
+    if user["role"] != "runner":
+        raise PermissionError("Só atletas podem editar as suas provas")
+    submission_id = payload.get("id")
+    required = [
+        "raceName",
+        "officialUrl",
+        "distanceKm",
+        "totalSeconds",
+        "rank",
+        "finishers",
+        "elevation",
+        "competition",
+        "terrain",
+        "seasonYear",
+    ]
+    if any(key not in payload for key in required):
+        raise ValueError("Dados da prova incompletos")
+    if payload["rank"] > payload["finishers"]:
+        raise ValueError("A classificação não pode ser superior ao número de finalistas")
+    if not payload.get("officialUrl", "").strip():
+        raise ValueError("É obrigatório indicar o link da classificação oficial")
+
+    with connect() as connection:
+        existing = connection.execute(
+            """
+            SELECT submissions.id
+            FROM submissions
+            JOIN runners ON runners.id = submissions.runner_id
+            WHERE submissions.id = ? AND runners.id = ?
+            """,
+            (submission_id, user["runner_id"]),
+        ).fetchone()
+        if existing is None:
+            raise ValueError("Submissão não encontrada")
+        connection.execute(
+            """
+            UPDATE submissions
+            SET race_name = ?,
+                official_url = ?,
+                proof_image = ?,
+                distance_km = ?,
+                total_seconds = ?,
+                rank = ?,
+                finishers = ?,
+                elevation = ?,
+                competition = ?,
+                terrain = ?,
+                season_year = ?,
+                verified = 0,
+                validation_status = 'pending'
+            WHERE id = ?
+            """,
+            (
+                payload["raceName"],
+                payload["officialUrl"],
+                proof_image_value(payload),
+                payload["distanceKm"],
+                payload["totalSeconds"],
+                payload["rank"],
+                payload["finishers"],
+                payload["elevation"],
+                payload["competition"],
+                payload["terrain"],
+                payload["seasonYear"],
+                submission_id,
+            ),
+        )
+    return {"submissions": fetch_submissions(), "message": "Correção enviada. A prova voltou a ficar pendente para validação."}
+
+
 def delete_submission(payload, user):
     if user["role"] != "general":
         raise PermissionError("Só o acesso geral pode apagar provas")
@@ -1504,6 +1575,17 @@ class RunnersLeagueHandler(SimpleHTTPRequestHandler):
             try:
                 submissions = update_submission(self.read_json(), user)
                 self.send_json({"submissions": submissions})
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+            except PermissionError as error:
+                self.send_json({"error": str(error)}, status=403)
+            return
+        if self.path == "/api/submissions/runner-update":
+            user = self.require_auth()
+            if user is None:
+                return
+            try:
+                self.send_json(update_runner_submission(self.read_json(), user))
             except ValueError as error:
                 self.send_json({"error": str(error)}, status=400)
             except PermissionError as error:
