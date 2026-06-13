@@ -311,6 +311,9 @@ const text = {
     generalPointsRanking: "Ranking geral por pontos",
     myRaces: "As minhas provas",
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
+    missingPassword: "Escreve a password para entrar.",
+    loginFailed: "Password errada ou acesso inválido.",
+    raceFormIncomplete: "Confirma distância, tempo, link oficial e classificação/finalistas.",
     databaseError: "Erro na base de dados",
     deleteRaceConfirm: (raceName) => `Apagar "${raceName || "esta prova"}"?`,
     deleteRace: "Apagar prova",
@@ -424,6 +427,9 @@ const text = {
     generalPointsRanking: "Overall points ranking",
     myRaces: "My races",
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
+    missingPassword: "Enter the password to log in.",
+    loginFailed: "Wrong password or invalid access.",
+    raceFormIncomplete: "Check distance, time, official link and rank/finishers.",
     databaseError: "Database error",
     deleteRaceConfirm: (raceName) => `Delete "${raceName || "this race"}"?`,
     deleteRace: "Delete race",
@@ -918,9 +924,11 @@ function readRace() {
 }
 
 function setRaceFormFromSubmission(race) {
+  fields.runner.value = session?.type === "runner" ? session.name : race.runner || "";
   fields.raceName.value = race.raceName || "";
   fields.officialUrl.value = race.officialUrl || "";
   fields.proofImage.value = race.proofImage || "";
+  if (fields.proofImageStatus) fields.proofImageStatus.textContent = "";
   renderPhotoPreview(fields.proofImage, fields.proofImagePreview);
   const knownDistance = Array.from(fields.distance.options).find(
     (option) => option.value !== "custom" && Math.abs(Number(option.value) - Number(race.distanceKm)) < 0.0001
@@ -1323,11 +1331,11 @@ function renderAthleteProfile(runner) {
   const races = seasonRacesForRunner(runner);
   const eligibleRaces = races.filter((race) => race.validationStatus !== "rejected");
   const counting = eligibleRaces.slice(0, 6);
-  const outside = eligibleRaces.slice(6);
-  const rejected = races.filter((race) => race.validationStatus === "rejected");
+  const publicRaces = races.filter((race) => race.validationStatus !== "rejected");
   const score = counting.reduce((sum, race) => sum + race.total, 0);
   const approved = races.filter((race) => race.validationStatus === "approved").length;
   const profile = runnerProfileFor(runner);
+  const leaguePlace = leaguePositionForRunner(runner);
   const canShowProfile = Boolean(
     profile?.shareProfile || session?.type === "general" || (session?.type === "runner" && session.name === runner)
   );
@@ -1354,22 +1362,17 @@ function renderAthleteProfile(runner) {
       <span class="profile-visibility">${profile?.shareProfile ? t("shareProfile") : t("hideProfile")} · ${selectedSeason}</span>
     </div>
     <div class="profile-stats">
+      <div><span>${t("leaguePlace")}</span><strong>${leaguePlace ? `#${leaguePlace}` : "-"}</strong></div>
       <div><span>${t("seasonTotal")}</span><strong>${Math.round(score)}</strong></div>
-      <div><span>${t("countingRaces")}</span><strong>${counting.length}/6</strong></div>
-      <div><span>${t("approvedShort")}</span><strong>${approved}/3</strong></div>
-      <div><span>${t("eligibility")}</span><strong>${approved >= 3 ? t("eligible") : t("pendingShort")}</strong></div>
+      <div><span>${t("submittedRacesTitle")}</span><strong>${publicRaces.length}</strong></div>
+      <div><span>${t("approvedShort")}</span><strong>${approved}</strong></div>
     </div>
-    <div class="profile-columns">
-      <div>
-        <h3>${t("rankingCounting")}</h3>
-        ${renderProfileRaceList(counting)}
+    <div class="profile-public-races">
+      <div class="section-title">
+        <h3>${t("submittedRacesTitle")}</h3>
+        <span>${publicRaces.length} ${publicRaces.length === 1 ? t("race") : t("races")}</span>
       </div>
-      <div>
-        <h3>${t("outsideTopSix")}</h3>
-        ${renderProfileRaceList(outside)}
-        <h3>${t("rejectedPlural")}</h3>
-        ${renderProfileRaceList(rejected)}
-      </div>
+      ${renderProfileRaceList(publicRaces)}
     </div>
   `;
 }
@@ -2174,23 +2177,33 @@ signupForm.addEventListener("submit", async (event) => {
 
 loginButton.addEventListener("click", async () => {
   const mode = getAccessMode();
+  loginMessage.textContent = "";
   if (!passwordInput.value) {
+    loginMessage.textContent = t("missingPassword");
     passwordInput.focus();
     return;
   }
-  const data = await apiRequest("/api/login", {
-    method: "POST",
-    body: JSON.stringify({
-      type: mode,
-      name: profileSelect.value,
-      password: passwordInput.value,
-    }),
-  });
-  session = data.session;
-  passwordInput.value = "";
-  loginMessage.textContent = "";
-  saveSession();
-  renderSession();
+  try {
+    const data = await apiRequest("/api/login", {
+      method: "POST",
+      body: JSON.stringify({
+        type: mode,
+        name: profileSelect.value,
+        password: passwordInput.value,
+      }),
+    });
+    session = data.session;
+    passwordInput.value = "";
+    loginMessage.textContent = "";
+    saveSession();
+    renderSession();
+  } catch (error) {
+    loginMessage.textContent =
+      error.message === "Credenciais inválidas" || error.message === "Invalid credentials"
+        ? t("loginFailed")
+        : error.message;
+    passwordInput.focus();
+  }
 });
 
 logoutButton.addEventListener("click", async () => {
@@ -2214,29 +2227,37 @@ form.addEventListener("change", renderCurrent);
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (profileMessage) profileMessage.textContent = "";
   const race = readRace();
-  if (!race.distanceKm || !race.totalSeconds || !race.officialUrl || race.rank > race.finishers) return;
-  const endpoint = editingRaceId ? "/api/submissions/runner-update" : "/api/submissions";
-  const data = await apiRequest(endpoint, {
-    method: "POST",
-    body: JSON.stringify(editingRaceId ? { ...race, id: editingRaceId } : race),
-  });
-  editingRaceId = null;
-  setRaceFormMode(null);
-  form.reset();
-  fields.runner.value = session?.type === "runner" ? session.name : fields.runner.value;
-  fields.seasonYear.value = currentYear;
-  customDistanceWrap.classList.add("hidden");
-  renderPhotoPreview(fields.proofImage, fields.proofImagePreview);
-  submissions = data.submissions;
-  renderSeasonFilter();
-  renderEditSubmissionOptions();
-  renderSubmissions();
-  renderAdminStats();
-  renderCurrent();
-  renderPendingValidations();
-  renderProfileManagement();
-  if (profileMessage) profileMessage.textContent = data.message || "";
+  if (!race.distanceKm || !race.totalSeconds || !race.officialUrl || race.rank > race.finishers) {
+    if (profileMessage) profileMessage.textContent = t("raceFormIncomplete");
+    return;
+  }
+  try {
+    const endpoint = editingRaceId ? "/api/submissions/runner-update" : "/api/submissions";
+    const data = await apiRequest(endpoint, {
+      method: "POST",
+      body: JSON.stringify(editingRaceId ? { ...race, id: editingRaceId } : race),
+    });
+    editingRaceId = null;
+    setRaceFormMode(null);
+    form.reset();
+    fields.runner.value = session?.type === "runner" ? session.name : fields.runner.value;
+    fields.seasonYear.value = currentYear;
+    customDistanceWrap.classList.add("hidden");
+    renderPhotoPreview(fields.proofImage, fields.proofImagePreview);
+    submissions = data.submissions;
+    renderSeasonFilter();
+    renderEditSubmissionOptions();
+    renderSubmissions();
+    renderAdminStats();
+    renderCurrent();
+    renderPendingValidations();
+    renderProfileManagement();
+    if (profileMessage) profileMessage.textContent = data.message || "";
+  } catch (error) {
+    if (profileMessage) profileMessage.textContent = error.message;
+  }
 });
 
 profileForm.addEventListener("submit", async (event) => {
@@ -2383,8 +2404,14 @@ document.addEventListener("click", (event) => {
 profileRaceList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-edit-runner-race]");
   if (!button) return;
+  event.preventDefault();
   const race = visibleSubmissions().find((item) => String(item.id) === String(button.dataset.editRunnerRace));
-  if (!race) return;
+  if (!race) {
+    if (profileMessage) profileMessage.textContent = t("databaseError");
+    return;
+  }
+  profileEditOpen = false;
+  renderProfileManagement();
   setRaceFormFromSubmission(race);
   setRaceFormMode(race.id);
   form.classList.remove("hidden");
@@ -2395,25 +2422,30 @@ profileRaceList.addEventListener("click", (event) => {
 profileRaceList.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-delete-runner-race]");
   if (!button) return;
+  event.preventDefault();
   const race = visibleSubmissions().find((item) => String(item.id) === String(button.dataset.deleteRunnerRace));
   if (!window.confirm(t("deleteRaceConfirm", race?.raceName))) return;
-  const data = await apiRequest("/api/submissions/runner-delete", {
-    method: "POST",
-    body: JSON.stringify({ id: Number(button.dataset.deleteRunnerRace) }),
-  });
-  submissions = data.submissions;
-  if (String(editingRaceId) === String(button.dataset.deleteRunnerRace)) {
-    editingRaceId = null;
-    setRaceFormMode(null);
+  try {
+    const data = await apiRequest("/api/submissions/runner-delete", {
+      method: "POST",
+      body: JSON.stringify({ id: Number(button.dataset.deleteRunnerRace) }),
+    });
+    submissions = data.submissions;
+    if (String(editingRaceId) === String(button.dataset.deleteRunnerRace)) {
+      editingRaceId = null;
+      setRaceFormMode(null);
+    }
+    renderSeasonFilter();
+    renderEditSubmissionOptions();
+    renderSubmissions();
+    renderAdminStats();
+    renderCurrent();
+    renderPendingValidations();
+    renderProfileManagement();
+    if (profileMessage) profileMessage.textContent = data.message || "";
+  } catch (error) {
+    if (profileMessage) profileMessage.textContent = error.message;
   }
-  renderSeasonFilter();
-  renderEditSubmissionOptions();
-  renderSubmissions();
-  renderAdminStats();
-  renderCurrent();
-  renderPendingValidations();
-  renderProfileManagement();
-  if (profileMessage) profileMessage.textContent = data.message || "";
 });
 
 resetButton.addEventListener("click", async () => {
