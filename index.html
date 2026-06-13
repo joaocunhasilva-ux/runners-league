@@ -404,6 +404,13 @@
                     Link oficial
                     <input id="edit-official-url" type="url" />
                   </label>
+                  <label>
+                    Imagem do resultado ou diploma
+                    <input id="edit-proof-image-file" type="file" accept="image/*" />
+                    <input id="edit-proof-image" type="hidden" />
+                  </label>
+                  <div id="edit-proof-image-preview" class="photo-preview proof-preview" aria-live="polite"></div>
+                  <p id="edit-proof-image-status" class="form-note" role="status"></p>
                   <div class="form-grid">
                     <label>
                       Distância
@@ -461,6 +468,14 @@
               Link da classificação oficial
               <input id="official-url" type="url" value="https://example.com/classificacao" />
             </label>
+
+            <label>
+              Imagem do resultado ou diploma
+              <input id="proof-image-file" type="file" accept="image/*" />
+              <input id="proof-image" type="hidden" />
+            </label>
+            <div id="proof-image-preview" class="photo-preview proof-preview" aria-live="polite"></div>
+            <p id="proof-image-status" class="form-note" role="status"></p>
 
             <div class="form-grid">
               <label>

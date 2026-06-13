@@ -112,6 +112,10 @@ const editSubmissionForm = document.querySelector("#edit-submission-form");
 const editSubmissionSelect = document.querySelector("#edit-submission-select");
 const editRaceName = document.querySelector("#edit-race-name");
 const editOfficialUrl = document.querySelector("#edit-official-url");
+const editProofImage = document.querySelector("#edit-proof-image");
+const editProofImageFile = document.querySelector("#edit-proof-image-file");
+const editProofImagePreview = document.querySelector("#edit-proof-image-preview");
+const editProofImageStatus = document.querySelector("#edit-proof-image-status");
 const editDistance = document.querySelector("#edit-distance");
 const editTotalSeconds = document.querySelector("#edit-total-seconds");
 const editRank = document.querySelector("#edit-rank");
@@ -130,6 +134,10 @@ const fields = {
   runner: document.querySelector("#runner"),
   raceName: document.querySelector("#race-name"),
   officialUrl: document.querySelector("#official-url"),
+  proofImage: document.querySelector("#proof-image"),
+  proofImageFile: document.querySelector("#proof-image-file"),
+  proofImagePreview: document.querySelector("#proof-image-preview"),
+  proofImageStatus: document.querySelector("#proof-image-status"),
   distance: distanceSelect,
   customDistance: document.querySelector("#custom-distance"),
   hours: document.querySelector("#hours"),
@@ -292,6 +300,7 @@ const text = {
     shareInstagram: "Instagram",
     shareFacebook: "Facebook",
     shareX: "X",
+    viewProof: "Ver comprovativo",
     instagramCopied: "Legenda copiada. Cola-a no Instagram.",
     shareCopied: "Texto de partilha copiado.",
     deleteRunner: "Eliminar",
@@ -398,6 +407,7 @@ const text = {
     shareInstagram: "Instagram",
     shareFacebook: "Facebook",
     shareX: "X",
+    viewProof: "View proof",
     instagramCopied: "Caption copied. Paste it on Instagram.",
     shareCopied: "Share text copied.",
     deleteRunner: "Delete",
@@ -523,6 +533,7 @@ const staticText = {
   "Prova": "Race",
   "Nome da prova": "Race name",
   "Link oficial": "Official link",
+  "Imagem do resultado ou diploma": "Result or race diploma image",
   "Distância": "Distance",
   "Tempo total": "Total time",
   "Classificação": "Ranking",
@@ -551,6 +562,7 @@ const staticText = {
   "Pista": "Track",
   "A prova fica pendente até ser aprovada pelo acesso geral.": "The race stays pending until it is approved by general access.",
   "Submeter prova": "Submit race",
+  "Ver comprovativo": "View proof",
   "Ranking público": "Public ranking",
   "Ranking por pontos": "Points ranking",
   "Pontuação estimada": "Estimated score",
@@ -658,6 +670,8 @@ const serverText = {
   "Atleta eliminado.": "Athlete deleted.",
   "Nome do atleta demasiado curto": "Athlete name is too short",
   "A imagem é demasiado grande. Usa uma foto com menos de 900 KB.": "The image is too large. Use a photo under 900 KB.",
+  "A imagem do comprovativo é demasiado grande. Usa uma imagem com menos de 900 KB.":
+    "The proof image is too large. Use an image under 900 KB.",
   "Ano de nascimento inválido": "Invalid birth year",
   "Já existe um atleta com esse nome": "An athlete with that name already exists",
   "Inscrição criada. Já podes entrar como atleta.": "Registration created. You can now log in as an athlete.",
@@ -841,6 +855,7 @@ function readRace() {
     runner: fields.runner.value.trim() || t("runner"),
     raceName: fields.raceName.value.trim() || t("officialRace"),
     officialUrl: fields.officialUrl.value.trim(),
+    proofImage: fields.proofImage.value.trim(),
     distanceKm,
     totalSeconds:
       Number(fields.hours.value) * 3600 +
@@ -1585,7 +1600,14 @@ function renderPendingValidations() {
               <div>
                 <strong>${escapeHtml(race.runner)}</strong>
                 <span>${escapeHtml(race.raceName)} · ${race.distanceKm.toFixed(race.distanceKm % 1 ? 1 : 0)} km · ${race.total} ${t("provisionalPoints")}</span>
-                <a href="${escapeHtml(race.officialUrl)}" target="_blank" rel="noreferrer">${t("officialClassification")}</a>
+                <div class="proof-links">
+                  <a href="${escapeHtml(race.officialUrl)}" target="_blank" rel="noreferrer">${t("officialClassification")}</a>
+                  ${
+                    race.proofImage
+                      ? `<a href="${escapeHtml(race.proofImage)}" target="_blank" rel="noreferrer">${t("viewProof")}</a>`
+                      : ""
+                  }
+                </div>
               </div>
               <div class="validation-actions">
                 <button type="button" data-validation-id="${race.id}" data-validation-status="approved">${t("approve")}</button>
@@ -1627,6 +1649,8 @@ function fillEditSubmissionForm() {
   if (!race) return;
   editRaceName.value = race.raceName;
   editOfficialUrl.value = race.officialUrl;
+  editProofImage.value = race.proofImage || "";
+  renderPhotoPreview(editProofImage, editProofImagePreview);
   editDistance.value = race.distanceKm;
   editTotalSeconds.value = race.totalSeconds;
   editRank.value = race.rank;
@@ -2376,6 +2400,7 @@ editSubmissionForm.addEventListener("submit", async (event) => {
       id: Number(editSubmissionSelect.value),
       raceName: editRaceName.value,
       officialUrl: editOfficialUrl.value,
+      proofImage: editProofImage.value,
       distanceKm: Number(editDistance.value),
       totalSeconds: Number(editTotalSeconds.value),
       rank: Number(editRank.value),
@@ -2413,6 +2438,8 @@ deleteSubmissionButton.addEventListener("click", async () => {
 attachPhotoPicker(signupFields.photoFile, signupFields.photoUrl, signupFields.photoPreview, signupMessage);
 attachPhotoPicker(newRunnerPhotoFile, newRunnerPhoto, newRunnerPhotoPreview, loginMessage);
 attachPhotoPicker(profileFields.photoFile, profileFields.photoUrl, profileFields.photoPreview, profileMessage);
+attachPhotoPicker(fields.proofImageFile, fields.proofImage, fields.proofImagePreview, fields.proofImageStatus);
+attachPhotoPicker(editProofImageFile, editProofImage, editProofImagePreview, editProofImageStatus);
 
 applyTheme();
 collectStaticText();

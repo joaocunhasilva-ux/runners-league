@@ -69,18 +69,19 @@ textarea:disabled {
 
 .app-shell {
   min-height: 100vh;
-  padding: 54px 0 0;
+  padding: 42px 0 0;
   position: relative;
 }
 
 .global-controls {
-  position: absolute;
-  top: 14px;
-  right: 18px;
+  position: fixed;
+  top: 10px;
+  right: 14px;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
 .workspace {
@@ -293,10 +294,10 @@ form {
 .theme-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  width: 116px;
+  gap: 3px;
+  width: 76px;
   margin: 0;
-  padding: 4px;
+  padding: 3px;
   background: rgba(5, 21, 43, 0.78);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -305,17 +306,19 @@ form {
 }
 
 .theme-switch {
-  width: 174px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 132px;
 }
 
 .lang-button,
 .theme-button {
-  min-height: 28px;
+  min-height: 22px;
+  padding: 0 6px;
   color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -538,6 +541,12 @@ fieldset {
   object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 8px 20px rgba(16, 35, 63, 0.12);
+}
+
+.proof-preview img {
+  width: min(100%, 220px);
+  height: 118px;
+  object-fit: cover;
 }
 
 .session-card {
@@ -982,6 +991,23 @@ fieldset {
 
 .validation-item a {
   color: var(--track);
+}
+
+.proof-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.proof-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  background: rgba(19, 169, 255, 0.08);
+  border: 1px solid rgba(19, 169, 255, 0.22);
+  border-radius: 999px;
+  text-decoration: none;
 }
 
 .validation-actions {
@@ -2209,23 +2235,22 @@ body[data-theme="light"] .sponsor-hero {
 
 @media (max-width: 740px) {
   .app-shell {
-    padding: 60px 12px 12px;
+    padding: 48px 12px 12px;
   }
 
   .global-controls {
-    position: fixed;
-    top: 10px;
-    right: 12px;
-    left: 12px;
+    top: 8px;
+    right: 10px;
+    left: auto;
     justify-content: flex-end;
   }
 
   .language-switch {
-    width: 104px;
+    width: 72px;
   }
 
   .theme-switch {
-    width: 118px;
+    width: 126px;
   }
 
   .submit-panel,

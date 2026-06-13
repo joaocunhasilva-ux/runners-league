@@ -176,6 +176,7 @@ def init_db():
             """
         )
         ensure_column(connection, "submissions", "official_url", "TEXT NOT NULL DEFAULT ''")
+        ensure_column(connection, "submissions", "proof_image", "TEXT NOT NULL DEFAULT ''")
         ensure_column(connection, "submissions", "validation_status", "TEXT NOT NULL DEFAULT 'pending'")
         ensure_column(connection, "submissions", "season_year", f"INTEGER NOT NULL DEFAULT {CURRENT_YEAR}")
         ensure_column(connection, "runners", "photo_url", "TEXT NOT NULL DEFAULT ''")
@@ -310,10 +311,11 @@ def insert_submission(connection, runner_id, submission):
             terrain,
             verified,
             official_url,
+            proof_image,
             validation_status,
             season_year
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             runner_id,
@@ -327,6 +329,7 @@ def insert_submission(connection, runner_id, submission):
             submission["terrain"],
             1 if submission["verified"] else 0,
             submission.get("officialUrl", ""),
+            proof_image_value(submission),
             submission.get("validationStatus", "approved" if submission.get("verified") else "pending"),
             int(submission.get("seasonYear", CURRENT_YEAR)),
         ),
@@ -360,6 +363,13 @@ def photo_value(payload):
     value = payload.get("photoUrl", "").strip()
     if len(value) > 1300000:
         raise ValueError("A imagem é demasiado grande. Usa uma foto com menos de 900 KB.")
+    return value
+
+
+def proof_image_value(payload):
+    value = payload.get("proofImage", "").strip()
+    if len(value) > 1300000:
+        raise ValueError("A imagem do comprovativo é demasiado grande. Usa uma imagem com menos de 900 KB.")
     return value
 
 
@@ -817,6 +827,7 @@ def fetch_submissions():
                 submissions.terrain,
                 submissions.verified,
                 submissions.official_url AS officialUrl,
+                submissions.proof_image AS proofImage,
                 submissions.validation_status AS validationStatus,
                 submissions.season_year AS seasonYear,
                 submissions.created_at AS createdAt
@@ -897,6 +908,7 @@ def update_submission(payload, user):
             UPDATE submissions
             SET race_name = ?,
                 official_url = ?,
+                proof_image = ?,
                 distance_km = ?,
                 total_seconds = ?,
                 rank = ?,
@@ -908,6 +920,7 @@ def update_submission(payload, user):
             (
                 payload["raceName"],
                 payload["officialUrl"],
+                proof_image_value(payload),
                 payload["distanceKm"],
                 payload["totalSeconds"],
                 payload["rank"],
