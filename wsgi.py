@@ -9,6 +9,7 @@ from server import (
     create_runner_account,
     create_submission,
     delete_session,
+    delete_runner_account,
     delete_submission,
     fetch_password_reset_requests,
     fetch_profiles,
@@ -145,6 +146,12 @@ def route_api(environ, start_response):
             if error:
                 return error
             return json_response(start_response, create_runner_account(read_json(environ), user), "201 Created")
+
+        if method == "POST" and path == "/api/runners/delete":
+            user, error = require_auth(environ, start_response)
+            if error:
+                return error
+            return json_response(start_response, delete_runner_account(read_json(environ), user))
 
         if method == "POST" and path == "/api/runners/password":
             user, error = require_auth(environ, start_response)
