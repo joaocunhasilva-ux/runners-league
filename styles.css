@@ -999,7 +999,8 @@ fieldset {
   gap: 8px;
 }
 
-.proof-links a {
+.proof-links a,
+.proof-links button {
   display: inline-flex;
   align-items: center;
   min-height: 30px;
@@ -1007,6 +1008,10 @@ fieldset {
   background: rgba(19, 169, 255, 0.08);
   border: 1px solid rgba(19, 169, 255, 0.22);
   border-radius: 999px;
+  color: var(--track);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
   text-decoration: none;
 }
 

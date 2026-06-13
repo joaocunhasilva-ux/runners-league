@@ -196,6 +196,7 @@ let unreadMessageCount = 0;
 let selectedAthlete = null;
 let signupOpen = false;
 let profileEditOpen = false;
+let editingRaceId = null;
 let language = localStorage.getItem("runners-league-language") || "pt";
 let theme = localStorage.getItem("runners-league-theme") || "auto";
 const systemTheme = window.matchMedia?.("(prefers-color-scheme: light)");
@@ -312,6 +313,11 @@ const text = {
     recoverRunnerProfile: "Seleciona um perfil de corredor para pedir recuperação.",
     databaseError: "Erro na base de dados",
     deleteRaceConfirm: (raceName) => `Apagar "${raceName || "esta prova"}"?`,
+    submitRace: "Submeter prova",
+    editRace: "Editar prova",
+    saveRaceCorrection: "Guardar correção",
+    raceCorrectionSent: "Correção enviada. A prova voltou a ficar pendente para validação.",
+    editingRaceHelp: "Edita os dados da prova e guarda a correção.",
   },
   en: {
     athlete: "athlete",
@@ -419,6 +425,11 @@ const text = {
     recoverRunnerProfile: "Select a runner profile to request password recovery.",
     databaseError: "Database error",
     deleteRaceConfirm: (raceName) => `Delete "${raceName || "this race"}"?`,
+    submitRace: "Submit race",
+    editRace: "Edit race",
+    saveRaceCorrection: "Save correction",
+    raceCorrectionSent: "Correction sent. The race is pending validation again.",
+    editingRaceHelp: "Edit the race details and save the correction.",
   },
 };
 
@@ -661,6 +672,7 @@ const serverText = {
   "Só atletas podem submeter provas": "Only athletes can submit races",
   "Só o acesso geral pode limpar submissões": "Only general access can clear submissions",
   "Só o acesso geral pode editar provas": "Only general access can edit races",
+  "Só atletas podem editar as suas provas": "Only athletes can edit their own races",
   "Submissão não encontrada": "Submission not found",
   "Só o acesso geral pode apagar provas": "Only general access can delete races",
   "Só o acesso geral pode criar atletas": "Only general access can create athletes",
@@ -684,6 +696,8 @@ const serverText = {
   "Mensagem enviada.": "Message sent.",
   "Mensagens marcadas como lidas.": "Messages marked as read.",
   "Newsletter enviada.": "Newsletter sent.",
+  "Correção enviada. A prova voltou a ficar pendente para validação.":
+    "Correction sent. The race is pending validation again.",
   "A newsletter deste mês já foi enviada.": "This month's newsletter has already been sent.",
   "Só o acesso geral pode enviar newsletters": "Only general access can send newsletters",
   "Password do acesso geral atualizada.": "General access password updated.",
@@ -788,6 +802,7 @@ function setLanguage(nextLanguage) {
   localStorage.setItem("runners-league-language", language);
   translateStaticContent();
   renderSession();
+  setRaceFormMode(editingRaceId);
 }
 
 function applyTheme() {
@@ -817,6 +832,34 @@ function formatPace(secondsPerKm) {
   const minutes = Math.floor(secondsPerKm / 60);
   const seconds = Math.round(secondsPerKm % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}/km`;
+}
+
+function formatDuration(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = String(safeSeconds % 60).padStart(2, "0");
+  return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}` : `${minutes}:${seconds}`;
+}
+
+function parseDuration(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return 0;
+  if (!raw.includes(":")) return Number(raw);
+  const parts = raw.split(":").map((part) => Number(part));
+  if (parts.some((part) => Number.isNaN(part) || part < 0)) return 0;
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return 0;
+}
+
+function setRaceFormMode(raceId = null) {
+  editingRaceId = raceId;
+  const button = form.querySelector(".primary-action");
+  if (!button) return;
+  button.innerHTML = editingRaceId
+    ? `<span aria-hidden="true">✓</span>${t("saveRaceCorrection")}`
+    : `<span aria-hidden="true">+</span>${t("submitRace")}`;
 }
 
 function escapeHtml(value) {
@@ -868,6 +911,33 @@ function readRace() {
     seasonYear: Number(fields.seasonYear.value),
     terrain: Number(document.querySelector("input[name='terrain']:checked").value),
   };
+}
+
+function setRaceFormFromSubmission(race) {
+  fields.raceName.value = race.raceName || "";
+  fields.officialUrl.value = race.officialUrl || "";
+  fields.proofImage.value = race.proofImage || "";
+  renderPhotoPreview(fields.proofImage, fields.proofImagePreview);
+  const knownDistance = Array.from(fields.distance.options).find(
+    (option) => option.value !== "custom" && Math.abs(Number(option.value) - Number(race.distanceKm)) < 0.0001
+  );
+  fields.distance.value = knownDistance?.value || "custom";
+  fields.customDistance.value = Number(race.distanceKm || 0);
+  customDistanceWrap.classList.toggle("hidden", fields.distance.value !== "custom");
+  const totalSeconds = Math.max(0, Math.round(Number(race.totalSeconds) || 0));
+  fields.hours.value = Math.floor(totalSeconds / 3600);
+  fields.minutes.value = Math.floor((totalSeconds % 3600) / 60);
+  fields.seconds.value = totalSeconds % 60;
+  fields.rank.value = race.rank || "";
+  fields.finishers.value = race.finishers || "";
+  fields.elevation.value = race.elevation || 0;
+  fields.competition.value = String(race.competition || 1);
+  fields.seasonYear.value = race.seasonYear || currentYear;
+  const terrain = Array.from(document.querySelectorAll("input[name='terrain']")).find(
+    (input) => Math.abs(Number(input.value) - Number(race.terrain || 1)) < 0.001
+  );
+  if (terrain) terrain.checked = true;
+  renderCurrent();
 }
 
 function calculateRace(race) {
@@ -1436,6 +1506,9 @@ function renderProfileManagement() {
               </div>
               <div class="submission-actions">
                 <div class="submission-score">${race.total}</div>
+                <button class="secondary-action compact-action" type="button" data-edit-runner-race="${race.id}">
+                  ${t("editRace")}
+                </button>
                 ${renderSocialShareActions("race", race.id)}
               </div>
             </article>
@@ -1541,6 +1614,39 @@ function openSocialShare(network, textToShare) {
   return t("shareCopied");
 }
 
+function openProofImage(proofImage) {
+  if (!proofImage) return;
+  const safeProofImage = escapeHtml(proofImage);
+  const proofWindow = window.open("", "_blank", "noopener,noreferrer");
+  if (!proofWindow) {
+    window.location.href = proofImage;
+    return;
+  }
+  proofWindow.document.write(`
+    <!doctype html>
+    <html lang="${language}">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Runners League · ${t("viewProof")}</title>
+        <style>
+          body { margin: 0; min-height: 100vh; background: #061426; color: white; font-family: Arial, sans-serif; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+          main { width: min(1100px, 100%); }
+          img { display: block; width: 100%; max-height: 82vh; object-fit: contain; border-radius: 12px; background: white; }
+          a { display: inline-block; margin-top: 16px; color: #17b7ff; font-weight: 700; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <img src="${safeProofImage}" alt="${t("viewProof")}" />
+          <a href="${safeProofImage}" download>${t("viewProof")}</a>
+        </main>
+      </body>
+    </html>
+  `);
+  proofWindow.document.close();
+}
+
 async function copyText(textToCopy) {
   try {
     await navigator.clipboard?.writeText(textToCopy);
@@ -1604,7 +1710,7 @@ function renderPendingValidations() {
                   <a href="${escapeHtml(race.officialUrl)}" target="_blank" rel="noreferrer">${t("officialClassification")}</a>
                   ${
                     race.proofImage
-                      ? `<a href="${escapeHtml(race.proofImage)}" target="_blank" rel="noreferrer">${t("viewProof")}</a>`
+                      ? `<button type="button" data-proof-id="${race.id}">${t("viewProof")}</button>`
                       : ""
                   }
                 </div>
@@ -1652,7 +1758,7 @@ function fillEditSubmissionForm() {
   editProofImage.value = race.proofImage || "";
   renderPhotoPreview(editProofImage, editProofImagePreview);
   editDistance.value = race.distanceKm;
-  editTotalSeconds.value = race.totalSeconds;
+  editTotalSeconds.value = formatDuration(race.totalSeconds);
   editRank.value = race.rank;
   editFinishers.value = race.finishers;
   editElevation.value = race.elevation;
@@ -2103,10 +2209,18 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const race = readRace();
   if (!race.distanceKm || !race.totalSeconds || !race.officialUrl || race.rank > race.finishers) return;
-  const data = await apiRequest("/api/submissions", {
+  const endpoint = editingRaceId ? "/api/submissions/runner-update" : "/api/submissions";
+  const data = await apiRequest(endpoint, {
     method: "POST",
-    body: JSON.stringify(race),
+    body: JSON.stringify(editingRaceId ? { ...race, id: editingRaceId } : race),
   });
+  editingRaceId = null;
+  setRaceFormMode(null);
+  form.reset();
+  fields.runner.value = session?.type === "runner" ? session.name : fields.runner.value;
+  fields.seasonYear.value = currentYear;
+  customDistanceWrap.classList.add("hidden");
+  renderPhotoPreview(fields.proofImage, fields.proofImagePreview);
   submissions = data.submissions;
   renderSeasonFilter();
   renderEditSubmissionOptions();
@@ -2115,6 +2229,7 @@ form.addEventListener("submit", async (event) => {
   renderCurrent();
   renderPendingValidations();
   renderProfileManagement();
+  if (profileMessage) profileMessage.textContent = data.message || "";
 });
 
 profileForm.addEventListener("submit", async (event) => {
@@ -2248,6 +2363,26 @@ document.addEventListener("click", async (event) => {
   if (!textToShare) return;
   const message = openSocialShare(button.dataset.socialShare, textToShare);
   if (profileMessage) profileMessage.textContent = message;
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-proof-id]");
+  if (!button) return;
+  event.preventDefault();
+  const race = submissions.find((item) => String(item.id) === String(button.dataset.proofId));
+  openProofImage(race?.proofImage || "");
+});
+
+profileRaceList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-edit-runner-race]");
+  if (!button) return;
+  const race = visibleSubmissions().find((item) => String(item.id) === String(button.dataset.editRunnerRace));
+  if (!race) return;
+  setRaceFormFromSubmission(race);
+  setRaceFormMode(race.id);
+  form.classList.remove("hidden");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (profileMessage) profileMessage.textContent = t("editingRaceHelp");
 });
 
 resetButton.addEventListener("click", async () => {
@@ -2402,7 +2537,7 @@ editSubmissionForm.addEventListener("submit", async (event) => {
       officialUrl: editOfficialUrl.value,
       proofImage: editProofImage.value,
       distanceKm: Number(editDistance.value),
-      totalSeconds: Number(editTotalSeconds.value),
+      totalSeconds: parseDuration(editTotalSeconds.value),
       rank: Number(editRank.value),
       finishers: Number(editFinishers.value),
       elevation: Number(editElevation.value),
