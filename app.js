@@ -1,4 +1,7 @@
 const form = document.querySelector("#race-form");
+const raceFormPrompt = document.querySelector("#race-form-prompt");
+const openRaceFormButton = document.querySelector("#open-race-form");
+const raceConfirmation = document.querySelector("#race-confirmation");
 const distanceSelect = document.querySelector("#distance");
 const customDistanceWrap = document.querySelector("#custom-distance-wrap");
 const canvas = document.querySelector("#route-canvas");
@@ -197,6 +200,8 @@ let selectedAthlete = null;
 let signupOpen = false;
 let profileEditOpen = false;
 let editingRaceId = null;
+let raceFormOpen = false;
+let pendingRaceSubmission = null;
 let language = localStorage.getItem("runners-league-language") || "pt";
 let theme = localStorage.getItem("runners-league-theme") || "auto";
 const systemTheme = window.matchMedia?.("(prefers-color-scheme: light)");
@@ -314,6 +319,15 @@ const text = {
     missingPassword: "Escreve a password para entrar.",
     loginFailed: "Password errada ou acesso inválido.",
     raceFormIncomplete: "Confirma distância, tempo, link oficial e classificação/finalistas.",
+    confirmSubmission: "Confirmar submissão",
+    confirmAndSubmit: "Confirmar e submeter",
+    backToEdit: "Voltar a editar",
+    distance: "Distância",
+    totalTime: "Tempo total",
+    paceLabel: "Ritmo",
+    classification: "Classificação",
+    elevationLabel: "Altimetria",
+    season: "Época",
     databaseError: "Erro na base de dados",
     deleteRaceConfirm: (raceName) => `Apagar "${raceName || "esta prova"}"?`,
     deleteRace: "Apagar prova",
@@ -430,6 +444,15 @@ const text = {
     missingPassword: "Enter the password to log in.",
     loginFailed: "Wrong password or invalid access.",
     raceFormIncomplete: "Check distance, time, official link and rank/finishers.",
+    confirmSubmission: "Confirm submission",
+    confirmAndSubmit: "Confirm and submit",
+    backToEdit: "Back to edit",
+    distance: "Distance",
+    totalTime: "Total time",
+    paceLabel: "Pace",
+    classification: "Classification",
+    elevationLabel: "Elevation",
+    season: "Season",
     databaseError: "Database error",
     deleteRaceConfirm: (raceName) => `Delete "${raceName || "this race"}"?`,
     deleteRace: "Delete race",
@@ -870,6 +893,54 @@ function setRaceFormMode(raceId = null) {
   button.innerHTML = editingRaceId
     ? `<span aria-hidden="true">✓</span>${t("saveRaceCorrection")}`
     : `<span aria-hidden="true">+</span>${t("submitRace")}`;
+}
+
+function updateRaceFormVisibility() {
+  const canSubmitRace = Boolean(session && session.type === "runner");
+  raceFormPrompt?.classList.toggle("hidden", !canSubmitRace || raceFormOpen);
+  form.classList.toggle("hidden", !canSubmitRace || !raceFormOpen);
+}
+
+function clearRaceConfirmation() {
+  pendingRaceSubmission = null;
+  if (!raceConfirmation) return;
+  raceConfirmation.classList.add("hidden");
+  raceConfirmation.innerHTML = "";
+}
+
+function renderRaceConfirmation(race) {
+  pendingRaceSubmission = race;
+  const result = calculateRace({ ...race, validationStatus: "pending" });
+  raceConfirmation.classList.remove("hidden");
+  raceConfirmation.innerHTML = `
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">${t("confirmSubmission")}</p>
+        <h2>${escapeHtml(race.raceName)}</h2>
+      </div>
+      <span>${Math.round(result.total)} ${t("pts")}</span>
+    </div>
+    <dl class="race-summary-grid">
+      <div><dt>${t("runner")}</dt><dd>${escapeHtml(race.runner)}</dd></div>
+      <div><dt>${t("distance")}</dt><dd>${race.distanceKm.toFixed(race.distanceKm % 1 ? 4 : 0)} km</dd></div>
+      <div><dt>${t("totalTime")}</dt><dd>${formatDuration(race.totalSeconds)}</dd></div>
+      <div><dt>${t("paceLabel")}</dt><dd>${formatPace(result.paceSeconds)}</dd></div>
+      <div><dt>${t("classification")}</dt><dd>${race.rank}/${race.finishers}</dd></div>
+      <div><dt>${t("elevationLabel")}</dt><dd>${Math.round(race.elevation)} m D+</dd></div>
+      <div><dt>${t("season")}</dt><dd>${race.seasonYear}</dd></div>
+      <div><dt>${t("officialClassification")}</dt><dd>${escapeHtml(race.officialUrl)}</dd></div>
+    </dl>
+    <div class="form-grid">
+      <button id="confirm-race-submit" class="primary-action compact-action" type="button">
+        <span aria-hidden="true">✓</span>
+        ${t("confirmAndSubmit")}
+      </button>
+      <button id="edit-race-before-submit" class="secondary-action compact-action" type="button">
+        ${t("backToEdit")}
+      </button>
+    </div>
+  `;
+  raceConfirmation.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function escapeHtml(value) {
@@ -1894,10 +1965,10 @@ function renderSession() {
   loginPanel.classList.toggle("hidden", loggedIn || signupOpen);
   signupPanel.classList.toggle("hidden", loggedIn || !signupOpen);
   sessionPanel.classList.toggle("hidden", !loggedIn);
-  form.classList.toggle("hidden", !loggedIn || session.type !== "runner");
   generalPanel.classList.toggle("hidden", !loggedIn || session.type !== "general");
   resetButton.classList.toggle("hidden", !loggedIn || session.type !== "general");
   profileNavButton.classList.toggle("hidden", !loggedIn || session.type !== "runner");
+  updateRaceFormVisibility();
   if ((!loggedIn || session.type !== "runner") && document.querySelector(".app-page.active")?.id === "profile-page") {
     showView("league");
   }
@@ -2049,6 +2120,16 @@ langButtons.forEach((button) => {
 
 themeButtons.forEach((button) => {
   button.addEventListener("click", () => setTheme(button.dataset.theme));
+});
+
+openRaceFormButton?.addEventListener("click", () => {
+  raceFormOpen = true;
+  editingRaceId = null;
+  setRaceFormMode(null);
+  clearRaceConfirmation();
+  if (profileMessage) profileMessage.textContent = "";
+  updateRaceFormVisibility();
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 runnerAccountSearch?.addEventListener("input", () => {
@@ -2209,6 +2290,8 @@ loginButton.addEventListener("click", async () => {
 logoutButton.addEventListener("click", async () => {
   await apiRequest("/api/logout", { method: "POST" }).catch(() => {});
   session = null;
+  raceFormOpen = false;
+  editingRaceId = null;
   saveSession();
   renderSession();
 });
@@ -2222,8 +2305,14 @@ validationSearch.addEventListener("input", renderPendingValidations);
 adminRaceSearch.addEventListener("input", renderEditSubmissionOptions);
 adminStatusFilter.addEventListener("change", renderEditSubmissionOptions);
 
-form.addEventListener("input", renderCurrent);
-form.addEventListener("change", renderCurrent);
+form.addEventListener("input", () => {
+  clearRaceConfirmation();
+  renderCurrent();
+});
+form.addEventListener("change", () => {
+  clearRaceConfirmation();
+  renderCurrent();
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -2233,6 +2322,20 @@ form.addEventListener("submit", async (event) => {
     if (profileMessage) profileMessage.textContent = t("raceFormIncomplete");
     return;
   }
+  renderRaceConfirmation(race);
+});
+
+raceConfirmation?.addEventListener("click", async (event) => {
+  const confirmButton = event.target.closest("#confirm-race-submit");
+  const editButton = event.target.closest("#edit-race-before-submit");
+  if (editButton) {
+    clearRaceConfirmation();
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (!confirmButton || !pendingRaceSubmission) return;
+  if (profileMessage) profileMessage.textContent = "";
+  const race = pendingRaceSubmission;
   try {
     const endpoint = editingRaceId ? "/api/submissions/runner-update" : "/api/submissions";
     const data = await apiRequest(endpoint, {
@@ -2240,8 +2343,10 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify(editingRaceId ? { ...race, id: editingRaceId } : race),
     });
     editingRaceId = null;
+    raceFormOpen = false;
     setRaceFormMode(null);
     form.reset();
+    clearRaceConfirmation();
     fields.runner.value = session?.type === "runner" ? session.name : fields.runner.value;
     fields.seasonYear.value = currentYear;
     customDistanceWrap.classList.add("hidden");
@@ -2254,6 +2359,7 @@ form.addEventListener("submit", async (event) => {
     renderCurrent();
     renderPendingValidations();
     renderProfileManagement();
+    updateRaceFormVisibility();
     if (profileMessage) profileMessage.textContent = data.message || "";
   } catch (error) {
     if (profileMessage) profileMessage.textContent = error.message;
@@ -2413,8 +2519,10 @@ profileRaceList.addEventListener("click", (event) => {
   profileEditOpen = false;
   renderProfileManagement();
   setRaceFormFromSubmission(race);
+  raceFormOpen = true;
+  clearRaceConfirmation();
   setRaceFormMode(race.id);
-  form.classList.remove("hidden");
+  updateRaceFormVisibility();
   form.scrollIntoView({ behavior: "smooth", block: "start" });
   if (profileMessage) profileMessage.textContent = t("editingRaceHelp");
 });
@@ -2433,6 +2541,7 @@ profileRaceList.addEventListener("click", async (event) => {
     submissions = data.submissions;
     if (String(editingRaceId) === String(button.dataset.deleteRunnerRace)) {
       editingRaceId = null;
+      raceFormOpen = false;
       setRaceFormMode(null);
     }
     renderSeasonFilter();
@@ -2442,6 +2551,7 @@ profileRaceList.addEventListener("click", async (event) => {
     renderCurrent();
     renderPendingValidations();
     renderProfileManagement();
+    updateRaceFormVisibility();
     if (profileMessage) profileMessage.textContent = data.message || "";
   } catch (error) {
     if (profileMessage) profileMessage.textContent = error.message;

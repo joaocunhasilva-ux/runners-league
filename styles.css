@@ -781,6 +781,66 @@ fieldset {
   align-content: start;
 }
 
+.race-form-prompt {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(8, 35, 70, 0.78), rgba(5, 21, 43, 0.92));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.race-form-prompt h2,
+.race-form-prompt p {
+  margin: 0;
+}
+
+.race-form-prompt p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.race-confirmation {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(8, 117, 209, 0.18), rgba(5, 21, 43, 0.94));
+  border: 1px solid rgba(77, 177, 255, 0.28);
+  border-radius: 8px;
+}
+
+.race-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.race-summary-grid div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.race-summary-grid dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.race-summary-grid dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink);
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .messages-panel,
 .message-form {
   display: grid;
@@ -1233,9 +1293,9 @@ fieldset {
   position: relative;
   display: grid;
   grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
-  gap: 0;
+  gap: 12px;
   min-height: 320px;
-  overflow: hidden;
+  overflow: visible;
   background:
     radial-gradient(circle at 60% 35%, rgba(19, 169, 255, 0.18), transparent 34%),
     linear-gradient(135deg, rgba(8, 35, 70, 0.84), rgba(2, 9, 21, 0.92));
@@ -1384,6 +1444,7 @@ fieldset {
   display: grid;
   grid-template-columns: minmax(180px, 0.46fr) minmax(0, 1fr);
   gap: 14px;
+  min-width: 0;
   min-height: 320px;
   padding: 22px;
   background:
@@ -1395,6 +1456,7 @@ fieldset {
   display: grid;
   align-content: start;
   gap: 14px;
+  min-width: 0;
   min-height: 320px;
   padding: 22px;
   background:
@@ -1404,7 +1466,7 @@ fieldset {
 
 .registered-athletes {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 10px;
   max-height: 245px;
   overflow: auto;
@@ -2189,7 +2251,7 @@ body[data-theme="light"] .sponsor-hero {
   line-height: 1.45;
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1180px) {
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -2206,6 +2268,10 @@ body[data-theme="light"] .sponsor-hero {
   .admin-overview,
   .feature-strip {
     grid-template-columns: 1fr;
+  }
+
+  .calculation-panel {
+    grid-template-columns: minmax(180px, 0.36fr) minmax(0, 1fr);
   }
 
   .league-hero {
@@ -2291,6 +2357,10 @@ body[data-theme="light"] .sponsor-hero {
   }
 
   .metric-stack > div {
+    grid-template-columns: 1fr;
+  }
+
+  .race-summary-grid {
     grid-template-columns: 1fr;
   }
 
