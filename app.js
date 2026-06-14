@@ -119,6 +119,7 @@ const editProofImage = document.querySelector("#edit-proof-image");
 const editProofImageFile = document.querySelector("#edit-proof-image-file");
 const editProofImagePreview = document.querySelector("#edit-proof-image-preview");
 const editProofImageStatus = document.querySelector("#edit-proof-image-status");
+const adminRaceConfirmation = document.querySelector("#admin-race-confirmation");
 const editDistance = document.querySelector("#edit-distance");
 const editTotalSeconds = document.querySelector("#edit-total-seconds");
 const editRank = document.querySelector("#edit-rank");
@@ -202,6 +203,7 @@ let profileEditOpen = false;
 let editingRaceId = null;
 let raceFormOpen = false;
 let pendingRaceSubmission = null;
+let pendingAdminRaceSubmission = null;
 let language = localStorage.getItem("runners-league-language") || "pt";
 let theme = localStorage.getItem("runners-league-theme") || "auto";
 const systemTheme = window.matchMedia?.("(prefers-color-scheme: light)");
@@ -321,6 +323,7 @@ const text = {
     raceFormIncomplete: "Confirma distância, tempo, link oficial e classificação/finalistas.",
     confirmSubmission: "Confirmar submissão",
     confirmAndSubmit: "Confirmar e submeter",
+    confirmAndSave: "Confirmar e guardar",
     backToEdit: "Voltar a editar",
     distance: "Distância",
     totalTime: "Tempo total",
@@ -446,6 +449,7 @@ const text = {
     raceFormIncomplete: "Check distance, time, official link and rank/finishers.",
     confirmSubmission: "Confirm submission",
     confirmAndSubmit: "Confirm and submit",
+    confirmAndSave: "Confirm and save",
     backToEdit: "Back to edit",
     distance: "Distance",
     totalTime: "Total time",
@@ -908,11 +912,8 @@ function clearRaceConfirmation() {
   raceConfirmation.innerHTML = "";
 }
 
-function renderRaceConfirmation(race) {
-  pendingRaceSubmission = race;
-  const result = calculateRace({ ...race, validationStatus: "pending" });
-  raceConfirmation.classList.remove("hidden");
-  raceConfirmation.innerHTML = `
+function raceConfirmationMarkup(race, result, confirmLabel = t("confirmAndSubmit")) {
+  return `
     <div class="section-title">
       <div>
         <p class="eyebrow">${t("confirmSubmission")}</p>
@@ -931,16 +932,38 @@ function renderRaceConfirmation(race) {
       <div><dt>${t("officialClassification")}</dt><dd>${escapeHtml(race.officialUrl)}</dd></div>
     </dl>
     <div class="form-grid">
-      <button id="confirm-race-submit" class="primary-action compact-action" type="button">
+      <button class="primary-action compact-action" type="button" data-confirm-race-submit>
         <span aria-hidden="true">✓</span>
-        ${t("confirmAndSubmit")}
+        ${confirmLabel}
       </button>
-      <button id="edit-race-before-submit" class="secondary-action compact-action" type="button">
+      <button class="secondary-action compact-action" type="button" data-edit-race-before-submit>
         ${t("backToEdit")}
       </button>
     </div>
   `;
+}
+
+function renderRaceConfirmation(race) {
+  pendingRaceSubmission = race;
+  const result = calculateRace({ ...race, validationStatus: "pending" });
+  raceConfirmation.classList.remove("hidden");
+  raceConfirmation.innerHTML = raceConfirmationMarkup(race, result);
   raceConfirmation.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function clearAdminRaceConfirmation() {
+  pendingAdminRaceSubmission = null;
+  if (!adminRaceConfirmation) return;
+  adminRaceConfirmation.classList.add("hidden");
+  adminRaceConfirmation.innerHTML = "";
+}
+
+function renderAdminRaceConfirmation(race) {
+  pendingAdminRaceSubmission = race;
+  const result = calculateRace({ ...race, validationStatus: "pending" });
+  adminRaceConfirmation.classList.remove("hidden");
+  adminRaceConfirmation.innerHTML = raceConfirmationMarkup(race, result, t("confirmAndSave"));
+  adminRaceConfirmation.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function escapeHtml(value) {
@@ -1430,7 +1453,10 @@ function renderAthleteProfile(runner) {
             : ""
         }
       </div>
-      <span class="profile-visibility">${profile?.shareProfile ? t("shareProfile") : t("hideProfile")} · ${selectedSeason}</span>
+      <div class="profile-card-actions">
+        <span class="profile-visibility">${profile?.shareProfile ? t("shareProfile") : t("hideProfile")} · ${selectedSeason}</span>
+        ${canShowProfile ? renderSocialShareActions("membership", runner) : ""}
+      </div>
     </div>
     <div class="profile-stats">
       <div><span>${t("leaguePlace")}</span><strong>${leaguePlace ? `#${leaguePlace}` : "-"}</strong></div>
@@ -1544,6 +1570,7 @@ function renderProfileManagement() {
         </div>
         <div class="profile-card-actions">
           <span class="profile-visibility">${profile.shareProfile ? t("shareProfile") : t("hideProfile")}</span>
+          ${renderSocialShareActions("membership", runnerName)}
           <button class="secondary-action compact-action" type="button" data-edit-profile>
             ${t("editProfile")}
           </button>
@@ -1663,6 +1690,17 @@ function shareTextForRanking(runner) {
   const place = position ? `#${position}` : "-";
   const score = row ? `${Math.round(row.score)} pts` : "sem pontuação";
   return `Runners League: ${runner} está em ${place} na liga com ${score}. https://rljc.pythonanywhere.com`;
+}
+
+function shareTextForMembership(runner) {
+  const row = rankingRows().find((item) => item.runner === runner);
+  const position = leaguePositionForRunner(runner);
+  const runnerRaces = submissions.filter(
+    (item) => item.runner === runner && Number(item.seasonYear) === Number(selectedSeason)
+  );
+  const points = row ? Math.round(row.score) : 0;
+  const place = position ? `#${position}` : "-";
+  return `Já estou na Runners League! Lugar: ${place}. Provas submetidas: ${runnerRaces.length}. Pontuação: ${points} pts. https://rljc.pythonanywhere.com`;
 }
 
 function openSocialShare(network, textToShare) {
@@ -1827,6 +1865,7 @@ function renderEditSubmissionOptions() {
 }
 
 function fillEditSubmissionForm() {
+  clearAdminRaceConfirmation();
   const race = submissions.find((item) => String(item.id) === String(editSubmissionSelect.value));
   const disabled = !race;
   editSubmissionForm.querySelectorAll("input, button").forEach((control) => {
@@ -2326,8 +2365,8 @@ form.addEventListener("submit", async (event) => {
 });
 
 raceConfirmation?.addEventListener("click", async (event) => {
-  const confirmButton = event.target.closest("#confirm-race-submit");
-  const editButton = event.target.closest("#edit-race-before-submit");
+  const confirmButton = event.target.closest("[data-confirm-race-submit]");
+  const editButton = event.target.closest("[data-edit-race-before-submit]");
   if (editButton) {
     clearRaceConfirmation();
     form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2493,7 +2532,14 @@ document.addEventListener("click", async (event) => {
   const kind = button.dataset.shareKind;
   const value = button.dataset.shareValue;
   const race = kind === "race" ? visibleSubmissions().map(calculateRace).find((item) => String(item.id) === String(value)) : null;
-  const textToShare = kind === "ranking" ? shareTextForRanking(value) : race ? shareTextForRace(race) : "";
+  const textToShare =
+    kind === "ranking"
+      ? shareTextForRanking(value)
+      : kind === "membership"
+        ? shareTextForMembership(value)
+        : race
+          ? shareTextForRace(race)
+          : "";
   if (!textToShare) return;
   const message = openSocialShare(button.dataset.socialShare, textToShare);
   if (profileMessage) profileMessage.textContent = message;
@@ -2699,24 +2745,45 @@ passwordResetRequests.addEventListener("click", async (event) => {
 });
 
 editSubmissionSelect.addEventListener("change", fillEditSubmissionForm);
+editSubmissionForm.addEventListener("input", clearAdminRaceConfirmation);
+editSubmissionForm.addEventListener("change", clearAdminRaceConfirmation);
 
 editSubmissionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const selectedRace = submissions.find((item) => String(item.id) === String(editSubmissionSelect.value));
+  const race = {
+    id: Number(editSubmissionSelect.value),
+    runner: selectedRace?.runner || t("runner"),
+    raceName: editRaceName.value,
+    officialUrl: editOfficialUrl.value,
+    proofImage: editProofImage.value,
+    distanceKm: Number(editDistance.value),
+    totalSeconds: parseDuration(editTotalSeconds.value),
+    rank: Number(editRank.value),
+    finishers: Number(editFinishers.value),
+    elevation: Number(editElevation.value),
+    seasonYear: Number(editSeasonYear.value),
+    competition: selectedRace?.competition || 1,
+    terrain: selectedRace?.terrain || 1,
+  };
+  if (!race.distanceKm || !race.totalSeconds || !race.officialUrl || race.rank > race.finishers) return;
+  renderAdminRaceConfirmation(race);
+});
+
+adminRaceConfirmation?.addEventListener("click", async (event) => {
+  const confirmButton = event.target.closest("[data-confirm-race-submit]");
+  const editButton = event.target.closest("[data-edit-race-before-submit]");
+  if (editButton) {
+    clearAdminRaceConfirmation();
+    editSubmissionForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (!confirmButton || !pendingAdminRaceSubmission) return;
   const data = await apiRequest("/api/submissions/update", {
     method: "POST",
-    body: JSON.stringify({
-      id: Number(editSubmissionSelect.value),
-      raceName: editRaceName.value,
-      officialUrl: editOfficialUrl.value,
-      proofImage: editProofImage.value,
-      distanceKm: Number(editDistance.value),
-      totalSeconds: parseDuration(editTotalSeconds.value),
-      rank: Number(editRank.value),
-      finishers: Number(editFinishers.value),
-      elevation: Number(editElevation.value),
-      seasonYear: Number(editSeasonYear.value),
-    }),
+    body: JSON.stringify(pendingAdminRaceSubmission),
   });
+  clearAdminRaceConfirmation();
   submissions = data.submissions;
   renderSeasonFilter();
   renderEditSubmissionOptions();

@@ -40,41 +40,49 @@
           </nav>
 
           <section id="login-panel" class="login-panel">
-            <fieldset>
-              <legend>Acesso</legend>
-              <div class="segmented access-switch">
-                <input type="radio" name="access" id="access-runner" value="runner" checked />
-                <label for="access-runner">Corredor</label>
-                <input type="radio" name="access" id="access-general" value="general" />
-                <label for="access-general">Geral</label>
+            <div class="login-card">
+              <div class="login-card-header">
+                <p class="eyebrow">Acesso</p>
+                <h2>Entrar</h2>
               </div>
-            </fieldset>
+              <fieldset>
+                <legend>Acesso</legend>
+                <div class="segmented access-switch">
+                  <input type="radio" name="access" id="access-runner" value="runner" checked />
+                  <label for="access-runner">Corredor</label>
+                  <input type="radio" name="access" id="access-general" value="general" />
+                  <label for="access-general">Geral</label>
+                </div>
+              </fieldset>
 
-            <label>
-              Perfil
-              <select id="profile">
-                <option value="João Silva">João Silva</option>
-                <option value="Mariana Costa">Mariana Costa</option>
-                <option value="Rui Martins">Rui Martins</option>
-              </select>
-            </label>
+              <label>
+                Perfil
+                <select id="profile">
+                  <option value="João Silva">João Silva</option>
+                  <option value="Mariana Costa">Mariana Costa</option>
+                  <option value="Rui Martins">Rui Martins</option>
+                </select>
+              </label>
 
-            <label>
-              Password
-              <input id="password" type="password" autocomplete="current-password" />
-            </label>
+              <label>
+                Password
+                <input id="password" type="password" autocomplete="current-password" />
+              </label>
 
-            <button id="login-button" class="primary-action" type="button">
-              <span aria-hidden="true">→</span>
-              Entrar
-            </button>
-            <button id="password-reset-request" class="secondary-action" type="button">
-              Recuperar password
-            </button>
-            <button id="show-signup" class="secondary-action" type="button">
-              Inscrever atleta
-            </button>
-            <p id="login-message" class="form-note" role="status"></p>
+              <div class="login-actions">
+                <button id="login-button" class="primary-action" type="button">
+                  <span aria-hidden="true">→</span>
+                  Entrar
+                </button>
+                <button id="password-reset-request" class="secondary-action" type="button">
+                  Recuperar
+                </button>
+                <button id="show-signup" class="secondary-action" type="button">
+                  Inscrever
+                </button>
+              </div>
+              <p id="login-message" class="form-note" role="status"></p>
+            </div>
           </section>
 
           <section id="signup-panel" class="signup-panel hidden">
@@ -159,6 +167,13 @@
               <span>Validações, atletas e mensagens num só lugar.</span>
             </div>
 
+            <nav class="admin-quick-nav" aria-label="Atalhos do painel geral">
+              <a href="#admin-validations">Validações</a>
+              <a href="#admin-athletes">Atletas</a>
+              <a href="#admin-comms">Comunicação</a>
+              <a href="#admin-config">Configuração</a>
+            </nav>
+
             <div class="admin-overview">
               <div class="admin-stat">
                 <span>Total de provas</span>
@@ -175,7 +190,7 @@
             </div>
 
             <div class="admin-grid">
-              <section class="admin-group admin-group-priority">
+              <section id="admin-validations" class="admin-group admin-group-priority">
                 <div class="admin-group-header">
                   <span>01</span>
                   <div>
@@ -192,7 +207,7 @@
                 </section>
               </section>
 
-              <section class="admin-group admin-group-athletes">
+              <section id="admin-athletes" class="admin-group admin-group-athletes">
                 <div class="admin-group-header">
                   <span>02</span>
                   <div>
@@ -276,7 +291,7 @@
                 </div>
               </section>
 
-              <section class="admin-group admin-group-comms">
+              <section id="admin-comms" class="admin-group admin-group-comms">
                 <div class="admin-group-header">
                   <span>03</span>
                   <div>
@@ -327,7 +342,7 @@
                 </div>
               </section>
 
-              <section class="admin-group admin-group-config">
+              <section id="admin-config" class="admin-group admin-group-config">
                 <div class="admin-group-header">
                   <span>04</span>
                   <div>
@@ -448,6 +463,7 @@
                     </button>
                     <button id="delete-submission" class="danger-action" type="button">Apagar</button>
                   </div>
+                  <section id="admin-race-confirmation" class="race-confirmation hidden" aria-live="polite"></section>
                 </form>
               </section>
             </div>
