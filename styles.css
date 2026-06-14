@@ -386,6 +386,33 @@ textarea:focus {
   gap: 15px;
 }
 
+.login-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(8, 35, 70, 0.56), rgba(5, 21, 43, 0.72));
+  border: 1px solid rgba(77, 177, 255, 0.22);
+  border-radius: 10px;
+}
+
+.login-card-header h2 {
+  margin: 2px 0 0;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.login-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 0.85fr));
+  gap: 8px;
+}
+
+.login-actions .primary-action,
+.login-actions .secondary-action {
+  min-height: 44px;
+  padding: 0 10px;
+}
+
 .hidden {
   display: none !important;
 }
@@ -591,12 +618,14 @@ fieldset {
   align-items: end;
   justify-content: space-between;
   gap: 18px;
-  padding: 18px;
+  padding: 20px;
   color: #fff;
   background:
-    linear-gradient(135deg, rgba(13, 79, 159, 0.94), rgba(31, 122, 224, 0.88)),
+    radial-gradient(circle at 12% 20%, rgba(126, 232, 255, 0.28), transparent 30%),
+    linear-gradient(135deg, rgba(2, 9, 21, 0.98), rgba(13, 79, 159, 0.9)),
     var(--track-dark);
-  border-radius: 8px;
+  border: 1px solid rgba(126, 232, 255, 0.24);
+  border-radius: 10px;
   box-shadow: var(--tight-shadow);
 }
 
@@ -619,6 +648,32 @@ fieldset {
   text-align: right;
 }
 
+.admin-quick-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-quick-nav a {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.admin-quick-nav a:hover,
+.admin-quick-nav a:focus-visible {
+  color: #fff;
+  background: linear-gradient(135deg, var(--track-dark), var(--track));
+  outline: 0;
+}
+
 .admin-overview {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -626,10 +681,12 @@ fieldset {
 }
 
 .admin-stat {
-  min-height: 108px;
-  padding: 18px;
+  display: grid;
+  align-content: space-between;
+  min-height: 96px;
+  padding: 16px;
   background:
-    linear-gradient(180deg, rgba(8, 35, 70, 0.92), rgba(5, 21, 43, 0.95)),
+    linear-gradient(180deg, rgba(8, 35, 70, 0.72), rgba(5, 21, 43, 0.92)),
     var(--mist);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -638,7 +695,7 @@ fieldset {
 
 .admin-stat strong {
   color: var(--track);
-  font-size: 2.05rem;
+  font-size: 2.2rem;
   line-height: 1;
 }
 
@@ -652,9 +709,9 @@ fieldset {
   display: grid;
   gap: 12px;
   min-width: 0;
-  padding: 14px;
+  padding: 16px;
   background:
-    linear-gradient(180deg, rgba(8, 35, 70, 0.54), rgba(5, 21, 43, 0.58)),
+    linear-gradient(180deg, rgba(8, 35, 70, 0.36), rgba(5, 21, 43, 0.62)),
     var(--panel);
   border: 1px solid rgba(77, 177, 255, 0.2);
   border-radius: 10px;
@@ -680,7 +737,7 @@ fieldset {
   color: var(--track);
   background: rgba(19, 169, 255, 0.08);
   border: 1px solid rgba(19, 169, 255, 0.38);
-  border-radius: 8px;
+  border-radius: 50%;
   font-weight: 950;
 }
 
@@ -706,14 +763,14 @@ fieldset {
   gap: 12px;
   min-width: 0;
   padding: 16px;
-  background: rgba(8, 35, 70, 0.72);
+  background: rgba(3, 15, 32, 0.46);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: 0 10px 28px rgba(16, 35, 63, 0.06);
 }
 
 .admin-form-priority {
-  background: linear-gradient(180deg, rgba(8, 117, 209, 0.34), rgba(8, 35, 70, 0.78));
+  background: linear-gradient(180deg, rgba(8, 117, 209, 0.18), rgba(3, 15, 32, 0.68));
   border-color: rgba(19, 169, 255, 0.36);
 }
 
@@ -2264,6 +2321,7 @@ body[data-theme="light"] .sponsor-hero {
   .admin-grid,
   .admin-split,
   .admin-split-three,
+  .admin-quick-nav,
   .score-band,
   .admin-overview,
   .feature-strip {
@@ -2327,6 +2385,10 @@ body[data-theme="light"] .sponsor-hero {
   .submit-panel,
   .league-view {
     padding: 16px;
+  }
+
+  .login-actions {
+    grid-template-columns: 1fr;
   }
 
   .score-band {
